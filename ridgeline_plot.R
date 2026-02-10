@@ -32,15 +32,15 @@ period_means <- data %>%
 # Convert period to ordered factor for proper plotting
 data <- data %>%
   mutate(period = factor(period, 
-                         levels = c("1980-1984", "1985-1989", "1990-1994", "1995-1999",
-                                   "2000-20045", "1986-1991", "1992-1997", "1998-2003",
-                                   "2004-2009", "2010-2015", "2016-2021", "2022-2027
+                         levels = c("1980-1985", "1986-1991", "1992-1997", "1998-2003",
+                                   "2004-2009", "2010-2015", "2016-2021", "2022-2027"),
+                         ordered = TRUE))
 
 period_means <- period_means %>%
   mutate(period = factor(period, 
-                         levels = c("1980-1984", "1985-1989", "1990-1994", "1995-1999",
-                                   "2000-20045", "1986-1991", "1992-1997", "1998-2003",
-                                   "2004-2009", "2010-2015", "2016-2021", "2022-2027
+                         levels = c("1980-1985", "1986-1991", "1992-1997", "1998-2003",
+                                   "2004-2009", "2010-2015", "2016-2021", "2022-2027"),
+                         ordered = TRUE))
 
 # Create ridgeline plot
 p <- ggplot(data, aes(x = mass, y = period, fill = period)) +
@@ -52,9 +52,9 @@ p <- ggplot(data, aes(x = mass, y = period, fill = period)) +
              size = 3, 
              inherit.aes = FALSE) +
   labs(
-    title = "Distribution of Unknown Dispersed Bird Masses by 5-Year Period",
+    title = "Distribution of Unknown Dispersed Bird Masses by 6-Year Period",
     x = "Mass (g)",
-    y = "Period"6
+    y = "Period"
   ) +
   theme_minimal() +
   theme(
