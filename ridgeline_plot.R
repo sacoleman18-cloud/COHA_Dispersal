@@ -1,3 +1,14 @@
+# COHA Dispersal Ridgeline Plot
+# 
+# This script generates a single ridgeline plot showing Cooper's Hawk mass
+# distributions across 6-year generational periods. The plot includes:
+# - Unknown-dispersed bird mass distributions (ridgelines)
+# - Wisconsin mean masses (dots with dashed lines)
+# - Unknown mean masses (triangles with solid lines)
+#
+# Author: [Your name]
+# Date: February 10, 2026
+
 library(tidyverse)
 library(ggridges)
 library(ggplot2)
@@ -34,6 +45,12 @@ period_means <- data %>%
   summarise(mean_mass = mean(mass, na.rm = TRUE),
             .groups = "drop")
 
+# Calculate mean mass for Unknown dispersed birds only (mean lines)
+unknown_means <- data_unknown %>%
+  group_by(period) %>%
+  summarise(mean_mass = mean(mass, na.rm = TRUE),
+            .groups = "drop")
+
 # Convert period to ordered factor for proper plotting
 period_levels <- c(
   "1980-1985", "1986-1991", "1992-1997", "1998-2003",
@@ -46,35 +63,65 @@ data_unknown <- data_unknown %>%
 period_means <- period_means %>%
   mutate(period = factor(period, levels = period_levels, ordered = TRUE))
 
+unknown_means <- unknown_means %>%
+  mutate(period = factor(period, levels = period_levels, ordered = TRUE))
+
 # Create ridgeline plot
 p <- ggplot(data_unknown, aes(x = mass, y = period, fill = period)) +
-  geom_density_ridges(alpha = 0.75, scale = 1.05, show.legend = FALSE) +
+  geom_density_ridges(alpha = 0.7, scale = 2.25, show.legend = FALSE) +
+  # Add Wisconsin mean lines for each period (dashed)
+  geom_segment(
+    data = period_means,
+    aes(x = mean_mass, xend = mean_mass,
+        y = as.numeric(period), yend = as.numeric(period) + 1),
+    color = "black",
+    linetype = "dashed",
+    linewidth = 0.4,
+    alpha = 0.7
+  ) +
+  # Add Unknown-dispersed mean lines for each period (solid)
+  geom_segment(
+    data = unknown_means,
+    aes(x = mean_mass, xend = mean_mass,
+        y = as.numeric(period), yend = as.numeric(period) + 1,
+        color = period),
+    linetype = "solid",
+    linewidth = 0.8,
+    alpha = 1
+  ) +
   # Add mean masses as dots colored by period
   geom_point(
     data = period_means,
-    aes(x = mean_mass, y = period, color = period),
+    aes(x = mean_mass, y = period, fill = period),
+    shape = 21,
     size = 3,
-    stroke = 0.2,
+    stroke = 0.6,
+    color = "black",
     inherit.aes = FALSE
   ) +
-  scale_fill_brewer(palette = "Dark2") +
-  scale_color_brewer(palette = "Dark2") +
+  # Add Unknown mean masses as triangles at base
+  geom_point(
+    data = unknown_means,
+    aes(x = mean_mass, y = period, fill = period),
+    shape = 24,
+    size = 3,
+    stroke = 0.6,
+    color = "black",
+    inherit.aes = FALSE
+  ) +
+  scale_fill_viridis_d(option = "plasma") +
+  scale_color_viridis_d(option = "plasma") +
   labs(
-    title = "Unknown Dispersed Masses by 6-Year Period",
-    subtitle = "Ridgeline densities with Wisconsin mean mass markers",
     x = "Mass (g)",
-    y = "Period",
-    caption = "Ridgelines show Unknown dispersed birds; dots show Wisconsin mean mass by period."
+    y = "Period"
   ) +
   theme_minimal(base_size = 12) +
   theme(
-    plot.title = element_text(hjust = 0, size = 16, face = "bold"),
-    plot.subtitle = element_text(hjust = 0, size = 11, margin = margin(b = 8)),
-    plot.caption = element_text(hjust = 0, size = 9, color = "gray40", margin = margin(t = 8)),
     panel.grid.major.y = element_blank(),
     panel.grid.minor = element_blank(),
     axis.title.y = element_text(margin = margin(r = 8)),
-    axis.title.x = element_text(margin = margin(t = 8))
+    axis.title.x = element_text(margin = margin(t = 8)),
+    legend.position = "none"
   )
 
 # Display the plot

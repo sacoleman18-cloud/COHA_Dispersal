@@ -1,0 +1,245 @@
+---
+title: "COHA Dispersal Ridgeline Analysis"
+format: 
+  html:
+    code-fold: true
+    toc: true
+    theme: cosmo
+editor: visual
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggridges)
+library(ggplot2)
+
+# Load data
+data <- read.csv("data/data.csv")
+
+# Source the plot function
+source("plot_function.R")
+```
+
+## Overview
+
+This report presents 20 ridgeline plots analyzing COHA dispersal masses across 6-year periods. The first 10 plots use a compact scale (0.85), while the second 10 use an expanded scale (2.25). Each plot uses a unique color palette pair.
+
+## Summary
+
+This analysis presents COHA dispersal mass distributions across 6-year generational periods using ridgeline plots. Each plot includes:
+
+- **Ridgeline densities**: Distribution of Unknown-dispersed bird masses
+- **Colored triangles**: Mean mass of Unknown-dispersed birds per period (at baseline)
+- **Colored dots**: Mean mass of Wisconsin-dispersed birds per period
+- **Solid colored lines**: Visual guide for Unknown dispersal means (matches ridge color)
+- **Dashed black lines**: Visual guide for Wisconsin dispersal means
+
+### Analysis Structure
+
+- **Compact plots (1-10)**: Scale = 0.85, line height = 0.85, ideal for dense overviews
+- **Expanded plots (11-20)**: Scale = 2.25, line height = 1.0, ideal for detailed inspection
+- **Palette pairs**: Each plot uses unique color combinations to demonstrate visual alternatives
+
+## Compact Scale Plots (Scale = 0.85)
+
+### Plot 1: Plasma & Inferno
+
+```{r}
+#| fig-width: 10
+#| fig-height: 7
+create_ridgeline_plot(data, scale_value = 0.85, line_height = 0.85, 
+                      fill_palette = "plasma", color_palette = "inferno", 
+                      palette_type = "viridis")
+```
+
+### Plot 2: Viridis & Magma
+
+```{r}
+#| fig-width: 10
+#| fig-height: 7
+create_ridgeline_plot(data, scale_value = 0.85, line_height = 0.85, 
+                      fill_palette = "viridis", color_palette = "magma", 
+                      palette_type = "viridis")
+```
+
+### Plot 3: Magma & Plasma
+
+```{r}
+#| fig-width: 10
+#| fig-height: 7
+create_ridgeline_plot(data, scale_value = 0.85, line_height = 0.85, 
+                      fill_palette = "magma", color_palette = "plasma", 
+                      palette_type = "viridis")
+```
+
+### Plot 4: Inferno & Viridis
+
+```{r}
+#| fig-width: 10
+#| fig-height: 7
+create_ridgeline_plot(data, scale_value = 0.85, line_height = 0.85, 
+                      fill_palette = "inferno", color_palette = "viridis", 
+                      palette_type = "viridis")
+```
+
+### Plot 5: Cividis & Rocket
+
+```{r}
+#| fig-width: 10
+#| fig-height: 7
+create_ridgeline_plot(data, scale_value = 0.85, line_height = 0.85, 
+                      fill_palette = "cividis", color_palette = "rocket", 
+                      palette_type = "viridis")
+```
+
+### Plot 6: Rocket & Mako
+
+```{r}
+#| fig-width: 10
+#| fig-height: 7
+create_ridgeline_plot(data, scale_value = 0.85, line_height = 0.85, 
+                      fill_palette = "rocket", color_palette = "mako", 
+                      palette_type = "viridis")
+```
+
+### Plot 7: Mako & Turbo
+
+```{r}
+#| fig-width: 10
+#| fig-height: 7
+create_ridgeline_plot(data, scale_value = 0.85, line_height = 0.85, 
+                      fill_palette = "mako", color_palette = "turbo", 
+                      palette_type = "viridis")
+```
+
+### Plot 8: Turbo & Cividis
+
+```{r}
+#| fig-width: 10
+#| fig-height: 7
+create_ridgeline_plot(data, scale_value = 0.85, line_height = 0.85, 
+                      fill_palette = "turbo", color_palette = "cividis", 
+                      palette_type = "viridis")
+```
+
+### Plot 9: Set2 & Dark2
+
+```{r}
+#| fig-width: 10
+#| fig-height: 7
+create_ridgeline_plot(data, scale_value = 0.85, line_height = 0.85, 
+                      fill_palette = "Set2", color_palette = "Dark2", 
+                      palette_type = "brewer")
+```
+
+### Plot 10: Spectral & RdYlBu
+
+```{r}
+#| fig-width: 10
+#| fig-height: 7
+create_ridgeline_plot(data, scale_value = 0.85, line_height = 0.85, 
+                      fill_palette = "Spectral", color_palette = "RdYlBu", 
+                      palette_type = "brewer")
+```
+
+## Expanded Scale Plots (Scale = 2.25)
+
+### Plot 11: Plasma & Inferno
+
+```{r}
+#| fig-width: 10
+#| fig-height: 7
+create_ridgeline_plot(data, scale_value = 2.25, line_height = 1, 
+                      fill_palette = "plasma", color_palette = "inferno", 
+                      palette_type = "viridis")
+```
+
+### Plot 12: Viridis & Magma
+
+```{r}
+#| fig-width: 10
+#| fig-height: 7
+create_ridgeline_plot(data, scale_value = 2.25, line_height = 1, 
+                      fill_palette = "viridis", color_palette = "magma", 
+                      palette_type = "viridis")
+```
+
+### Plot 13: Magma & Plasma
+
+```{r}
+#| fig-width: 10
+#| fig-height: 7
+create_ridgeline_plot(data, scale_value = 2.25, line_height = 1, 
+                      fill_palette = "magma", color_palette = "plasma", 
+                      palette_type = "viridis")
+```
+
+### Plot 14: Inferno & Viridis
+
+```{r}
+#| fig-width: 10
+#| fig-height: 7
+create_ridgeline_plot(data, scale_value = 2.25, line_height = 1, 
+                      fill_palette = "inferno", color_palette = "viridis", 
+                      palette_type = "viridis")
+```
+
+### Plot 15: Cividis & Rocket
+
+```{r}
+#| fig-width: 10
+#| fig-height: 7
+create_ridgeline_plot(data, scale_value = 2.25, line_height = 1, 
+                      fill_palette = "cividis", color_palette = "rocket", 
+                      palette_type = "viridis")
+```
+
+### Plot 16: Rocket & Mako
+
+```{r}
+#| fig-width: 10
+#| fig-height: 7
+create_ridgeline_plot(data, scale_value = 2.25, line_height = 1, 
+                      fill_palette = "rocket", color_palette = "mako", 
+                      palette_type = "viridis")
+```
+
+### Plot 17: Mako & Turbo
+
+```{r}
+#| fig-width: 10
+#| fig-height: 7
+create_ridgeline_plot(data, scale_value = 2.25, line_height = 1, 
+                      fill_palette = "mako", color_palette = "turbo", 
+                      palette_type = "viridis")
+```
+
+### Plot 18: Turbo & Cividis
+
+```{r}
+#| fig-width: 10
+#| fig-height: 7
+create_ridgeline_plot(data, scale_value = 2.25, line_height = 1, 
+                      fill_palette = "turbo", color_palette = "cividis", 
+                      palette_type = "viridis")
+```
+
+### Plot 19: Set2 & Dark2
+
+```{r}
+#| fig-width: 10
+#| fig-height: 7
+create_ridgeline_plot(data, scale_value = 2.25, line_height = 1, 
+                      fill_palette = "Set2", color_palette = "Dark2", 
+                      palette_type = "brewer")
+```
+
+### Plot 20: Spectral & RdYlBu
+
+```{r}
+#| fig-width: 10
+#| fig-height: 7
+create_ridgeline_plot(data, scale_value = 2.25, line_height = 1, 
+                      fill_palette = "Spectral", color_palette = "RdYlBu", 
+                      palette_type = "brewer")
+```

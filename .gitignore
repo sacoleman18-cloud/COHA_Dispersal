@@ -1,4 +1,20 @@
+# Ignore R-specific files
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
+
+# Ignore output files
+*.png
+*.pdf
+*.html
+ridgeline_report_files/
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore temporary files
+*~
+*.swp
+*.swo
