@@ -15,6 +15,8 @@ This repository contains code and analysis for examining natal dispersal pattern
 COHA_Dispersal/
 ├── R/
 │   ├── plot_function.R          # Reusable ridgeline plot function
+│   ├── config.R                 # Plot configuration definitions
+│   ├── pipeline.R               # Main pipeline orchestrator
 │   └── ridgeline_plot.R         # Single plot generation script
 ├── inst/
 │   └── ridgeline_report.qmd     # Quarto report with 20 plots
@@ -25,6 +27,7 @@ COHA_Dispersal/
 ├── results/
 │   ├── png/                     # Generated plot images
 │   └── report/                  # Rendered HTML reports
+├── examples.R                   # Usage examples
 ├── .gitignore
 ├── COHA_Dispersal.Rproj
 └── README.md                    # This file
@@ -45,6 +48,45 @@ install.packages(c("tidyverse", "ggridges", "ggplot2", "quarto"))
 - Quarto CLI (for rendering reports)
 
 ## Usage
+
+### Quick Start
+
+See `examples.R` for detailed usage examples:
+
+```r
+source("examples.R")
+```
+
+### Run Complete Pipeline
+
+Generate all plots at once using the automated pipeline:
+
+```r
+source("R/pipeline.R")
+
+# Run pipeline (generates all 20 plots)
+plots <- run_pipeline()
+
+# List available plots
+list_plots()
+
+# Generate a specific plot by ID
+p <- generate_plot("compact_01")
+print(p)
+```
+
+### Pipeline Functions
+
+**`run_pipeline()`** - Main function to generate all plots
+- `data_path`: Path to data CSV (default: "data/data.csv")
+- `output_dir`: Output directory (default: "results/png")
+- `configs`: Plot configurations (default: from config.R)
+- `save_plots`: Whether to save plots (default: TRUE)
+- `verbose`: Print progress messages (default: TRUE)
+
+**`generate_plot(plot_id)`** - Generate a single plot by ID
+
+**`list_plots()`** - List all available plot configurations
 
 ### Generate a Single Plot
 
@@ -75,6 +117,8 @@ Reports are saved to `results/report/`
 
 ### Use Plot Function
 
+For custom plots beyond the configured set:
+
 ```r
 source("R/plot_function.R")
 data <- read.csv("data/data.csv")
@@ -88,6 +132,37 @@ create_ridgeline_plot(data, scale_value = 0.85, line_height = 0.85,
 create_ridgeline_plot(data, scale_value = 2.25, line_height = 1,
                       fill_palette = "viridis", color_palette = "magma",
                       palette_type = "viridis")
+```
+
+## Adding New Plots
+
+To add a new plot to the pipeline:
+
+1. **Edit `R/config.R`**: Add a new configuration to the `plot_configs` list
+
+```r
+list(
+  id = "custom_01",
+  name = "My Custom Plot",
+  scale_value = 1.5,
+  line_height = 0.9,
+  fill_palette = "plasma",
+  color_palette = "plasma",
+  palette_type = "viridis"
+)
+```
+
+2. **Run the pipeline**: Your new plot will be automatically generated
+
+```r
+source("R/pipeline.R")
+run_pipeline()
+```
+
+3. **Add to report** (optional): Include in `inst/ridgeline_report.qmd`
+
+```r
+generate_plot("custom_01")
 ```
 
 ## Data Format
@@ -111,6 +186,21 @@ Each ridgeline plot includes:
 - **Dashed black lines**: Wisconsin dispersal mean indicators
 
 ## Customization
+
+### Pipeline Architecture
+
+The analysis uses a modular pipeline architecture:
+
+1. **`R/config.R`** - Defines all plot specifications in a structured list
+2. **`R/plot_function.R`** - Core plotting function (reusable)
+3. **`R/pipeline.R`** - Orchestrates plot generation from configs
+4. **`inst/ridgeline_report.qmd`** - Quarto report references plots by ID
+
+This design allows you to:
+- Add new plots by editing only `config.R`
+- Reuse the plot function for ad-hoc analysis
+- Generate all plots with a single command
+- Maintain consistency across all outputs
 
 ### Available Palettes
 
