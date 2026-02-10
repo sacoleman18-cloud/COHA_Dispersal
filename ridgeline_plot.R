@@ -1,5 +1,3 @@
-install.packages("ggridges")
-
 library(tidyverse)
 library(ggridges)
 library(ggplot2)
@@ -29,34 +27,35 @@ data <- data %>%
 period_means <- data %>%
   group_by(period) %>%
   summarise(mean_mass = mean(mass, na.rm = TRUE),
-            .groups = 'drop')
+            .groups = "drop")
 
 # Convert period to ordered factor for proper plotting
+period_levels <- c(
+  "1980-1985", "1986-1991", "1992-1997", "1998-2003",
+  "2004-2009", "2010-2015", "2016-2021", "2022-2027"
+)
+
 data <- data %>%
-  mutate(period = factor(period, 
-                         levels = c("1980-1984", "1985-1989", "1990-1994", "1995-1999",
-                                   "2000-20045", "1986-1991", "1992-1997", "1998-2003",
-                                   "2004-2009", "2010-2015", "2016-2021", "2022-2027
+  mutate(period = factor(period, levels = period_levels, ordered = TRUE))
 
 period_means <- period_means %>%
-  mutate(period = factor(period, 
-                         levels = c("1980-1984", "1985-1989", "1990-1994", "1995-1999",
-                                   "2000-20045", "1986-1991", "1992-1997", "1998-2003",
-                                   "2004-2009", "2010-2015", "2016-2021", "2022-2027
+  mutate(period = factor(period, levels = period_levels, ordered = TRUE))
 
 # Create ridgeline plot
 p <- ggplot(data, aes(x = mass, y = period, fill = period)) +
   geom_density_ridges(alpha = 0.7, show.legend = FALSE) +
   # Add mean masses as black dots
-  geom_point(data = period_means, 
-             aes(x = mean_mass, y = period),
-             color = "black", 
-             size = 3, 
-             inherit.aes = FALSE) +
+  geom_point(
+    data = period_means,
+    aes(x = mean_mass, y = period),
+    color = "black",
+    size = 3,
+    inherit.aes = FALSE
+  ) +
   labs(
-    title = "Distribution of Unknown Dispersed Bird Masses by 5-Year Period",
+    title = "Distribution of Unknown Dispersed Bird Masses by 6-Year Period",
     x = "Mass (g)",
-    y = "Period"6
+    y = "Period"
   ) +
   theme_minimal() +
   theme(
