@@ -5,10 +5,10 @@
 .Ruserdata
 
 # Ignore output files
-*.png
-*.pdf
-*.html
-ridgeline_report_files/
+results/png/*.png
+results/report/*.html
+results/report/*.pdf
+results/report/ridgeline_report_files/
 
 # Ignore OS-specific files
 .DS_Store

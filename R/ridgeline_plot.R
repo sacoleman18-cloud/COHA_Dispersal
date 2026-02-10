@@ -128,7 +128,7 @@ p <- ggplot(data_unknown, aes(x = mass, y = period, fill = period)) +
 print(p)
 
 # Save the plot
-ggsave("ridgeline_plot.png", p, width = 10, height = 7, dpi = 300)
+ggsave("results/png/ridgeline_plot.png", p, width = 10, height = 7, dpi = 300)
 
 # Print summary statistics
 cat("\nSummary Statistics by Period:\n")

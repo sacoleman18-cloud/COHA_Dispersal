@@ -13,13 +13,20 @@ This repository contains code and analysis for examining natal dispersal pattern
 
 ```
 COHA_Dispersal/
+├── R/
+│   ├── plot_function.R          # Reusable ridgeline plot function
+│   └── ridgeline_plot.R         # Single plot generation script
+├── inst/
+│   └── ridgeline_report.qmd     # Quarto report with 20 plots
 ├── data/
 │   └── data.csv                 # Raw dispersal and mass data
 ├── docs/
 │   └── Natal Dispersal and Mass Analysis Notes.md
-├── plot_function.R              # Reusable ridgeline plot function
-├── ridgeline_plot.R             # Single plot generation script
-├── ridgeline_report.qmd         # Quarto report with 20 plots
+├── results/
+│   ├── png/                     # Generated plot images
+│   └── report/                  # Rendered HTML reports
+├── .gitignore
+├── COHA_Dispersal.Rproj
 └── README.md                    # This file
 ```
 
@@ -42,7 +49,7 @@ install.packages(c("tidyverse", "ggridges", "ggplot2", "quarto"))
 ### Generate a Single Plot
 
 ```r
-source("ridgeline_plot.R")
+source("R/ridgeline_plot.R")
 ```
 
 This creates a ridgeline plot showing:
@@ -55,19 +62,21 @@ This creates a ridgeline plot showing:
 Render the complete Quarto report with 20 plots:
 
 ```r
-quarto::quarto_render("ridgeline_report.qmd")
+quarto::quarto_render("inst/ridgeline_report.qmd")
 ```
 
 Or via terminal:
 
 ```bash
-quarto render ridgeline_report.qmd
+quarto render inst/ridgeline_report.qmd
 ```
+
+Reports are saved to `results/report/`
 
 ### Use Plot Function
 
 ```r
-source("plot_function.R")
+source("R/plot_function.R")
 data <- read.csv("data/data.csv")
 
 # Compact plot

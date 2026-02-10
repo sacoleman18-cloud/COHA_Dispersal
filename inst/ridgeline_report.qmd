@@ -5,6 +5,8 @@ format:
     code-fold: true
     toc: true
     theme: cosmo
+    output-file: "ridgeline_report.html"
+    output-dir: "../results/report"
 editor: visual
 ---
 
@@ -14,10 +16,10 @@ library(ggridges)
 library(ggplot2)
 
 # Load data
-data <- read.csv("data/data.csv")
+data <- read.csv("../data/data.csv")
 
 # Source the plot function
-source("plot_function.R")
+source("../R/plot_function.R")
 ```
 
 ## Overview
