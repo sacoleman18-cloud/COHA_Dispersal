@@ -48,25 +48,33 @@ period_means <- period_means %>%
 
 # Create ridgeline plot
 p <- ggplot(data_unknown, aes(x = mass, y = period, fill = period)) +
-  geom_density_ridges(alpha = 0.7, show.legend = FALSE) +
-  # Add mean masses as black dots
+  geom_density_ridges(alpha = 0.75, scale = 1.05, show.legend = FALSE) +
+  # Add mean masses as dots colored by period
   geom_point(
     data = period_means,
-    aes(x = mean_mass, y = period),
-    color = "black",
+    aes(x = mean_mass, y = period, color = period),
     size = 3,
+    stroke = 0.2,
     inherit.aes = FALSE
   ) +
+  scale_fill_brewer(palette = "Dark2") +
+  scale_color_brewer(palette = "Dark2") +
   labs(
-    title = "Distribution of Unknown Dispersed Bird Masses by 6-Year Period",
+    title = "Unknown Dispersed Masses by 6-Year Period",
+    subtitle = "Ridgeline densities with Wisconsin mean mass markers",
     x = "Mass (g)",
-    y = "Period"
+    y = "Period",
+    caption = "Ridgelines show Unknown dispersed birds; dots show Wisconsin mean mass by period."
   ) +
-  theme_minimal() +
+  theme_minimal(base_size = 12) +
   theme(
-    plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
-    axis.title = element_text(size = 12),
-    axis.text = element_text(size = 10)
+    plot.title = element_text(hjust = 0, size = 16, face = "bold"),
+    plot.subtitle = element_text(hjust = 0, size = 11, margin = margin(b = 8)),
+    plot.caption = element_text(hjust = 0, size = 9, color = "gray40", margin = margin(t = 8)),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.title.y = element_text(margin = margin(r = 8)),
+    axis.title.x = element_text(margin = margin(t = 8))
   )
 
 # Display the plot
