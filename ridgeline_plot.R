@@ -8,6 +8,7 @@ data <- read.csv("data/data.csv")
 # Create 6-year periods starting from 1980
 data <- data %>%
   mutate(
+    disp_lower = tolower(dispsersed),
     period = case_when(
       year >= 1980 & year <= 1985 ~ "1980-1985",
       year >= 1986 & year <= 1991 ~ "1986-1991",
@@ -19,12 +20,16 @@ data <- data %>%
       year >= 2022 & year <= 2027 ~ "2022-2027",
       TRUE ~ NA_character_
     )
-  ) %>%
-  # Filter for Unknown dispersed birds only
+  )
+
+# Filter for Unknown dispersed birds only (ridgeline)
+data_unknown <- data %>%
   filter(dispsersed == "Unknown", !is.na(period))
 
 # Calculate mean mass for each period (for the dots)
+# Calculate mean mass for Wisconsin dispersed birds only (mean dots)
 period_means <- data %>%
+  filter(disp_lower == "wisconsin", !is.na(period)) %>%
   group_by(period) %>%
   summarise(mean_mass = mean(mass, na.rm = TRUE),
             .groups = "drop")
@@ -35,14 +40,14 @@ period_levels <- c(
   "2004-2009", "2010-2015", "2016-2021", "2022-2027"
 )
 
-data <- data %>%
+data_unknown <- data_unknown %>%
   mutate(period = factor(period, levels = period_levels, ordered = TRUE))
 
 period_means <- period_means %>%
   mutate(period = factor(period, levels = period_levels, ordered = TRUE))
 
 # Create ridgeline plot
-p <- ggplot(data, aes(x = mass, y = period, fill = period)) +
+p <- ggplot(data_unknown, aes(x = mass, y = period, fill = period)) +
   geom_density_ridges(alpha = 0.7, show.legend = FALSE) +
   # Add mean masses as black dots
   geom_point(
