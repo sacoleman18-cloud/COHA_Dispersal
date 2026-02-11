@@ -25,13 +25,13 @@ library(knitr)
 library(kableExtra)
 
 # Source data quality modules
-source(here::here("R", "functions", "phase3_data_operations.R"))
+source(here::here("R", "functions", "data_operations.R"))
 source(here::here("R", "functions", "robustness.R"))
 source(here::here("R", "functions", "data_quality.R"))
-source(here::here("R", "functions", "logging.R"))
-source(here::here("R", "functions", "assertions.R"))
-source(here::here("R", "functions", "utilities.R"))
-source(here::here("R", "functions", "config_loader.R"))
+source(here::here("R", "functions", "core", "logging.R"))
+source(here::here("R", "functions", "core", "assertions.R"))
+source(here::here("R", "functions", "core", "utilities.R"))
+source(here::here("R", "functions", "core", "config.R"))
 ```
 
 # Executive Summary
@@ -442,7 +442,7 @@ quality_gate <- case_when(
 #| echo: true
 
 # Quality assessment can be reproduced with:
-source(here::here("R", "functions", "phase3_data_operations.R"))
+source(here::here("R", "functions", "data_operations.R"))
 
 result <- load_and_validate_data(
   file_path = here::here("data", "data.csv"),

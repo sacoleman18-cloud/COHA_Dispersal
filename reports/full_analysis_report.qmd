@@ -44,7 +44,7 @@ This report presents a comprehensive analysis of Cooper's Hawk (COHA) natal disp
 #| cache: true
 
 # Run complete pipeline with quality assessment
-result <- run_pipeline(verbose = FALSE)
+result <- run_pipeline(verbose = FALSE, use_registry = TRUE)
 
 # Extract key metrics
 data_quality <- result$phase_results$data_load$quality_score
@@ -52,6 +52,14 @@ plot_quality <- result$phase_results$plot_generation$quality_score
 overall_quality <- result$quality_score
 plots_generated <- result$plots_generated
 plots_total <- result$phase_results$plot_generation$plots_total
+
+# Phase 3: Load artifact registry for plot access
+registry_path <- here::here("R", "config", "artifact_registry.yaml")
+if (file.exists(registry_path)) {
+  registry <- yaml::read_yaml(registry_path)
+} else {
+  registry <- result$registry  # Fallback to pipeline result
+}
 ```
 
 - **Data Quality Score:** `r sprintf("%.0f/100", data_quality)` 
@@ -149,17 +157,28 @@ Compact ridgelines minimize overlap for high-density temporal data.
 #| fig-width: 10
 #| layout-ncol: 2
 
-# Use plot_results from pipeline run to get only the current 10 compact plots
-plot_results <- result$phase_results$plot_generation$results
-
-# Extract paths for compact plots (indices 1-10)
-compact_paths <- sapply(plot_results[1:10], function(x) x$output_path %||% NA)
-compact_paths <- compact_paths[!is.na(compact_paths) & file.exists(compact_paths)]
-
-if (length(compact_paths) > 0) {
-  knitr::include_graphics(compact_paths)
+# Phase 3: Load compact plots from artifact registry (not filesystem)
+if (!is.null(registry) && !is.null(registry$artifacts)) {
+  # Get compact plot artifacts (IDs starting with "compact_")
+  compact_artifacts <- Filter(
+    function(x) x$type == "ridgeline_plots" && grepl("^compact_", x$name),
+    registry$artifacts
+  )
+  
+  # Sort by name to ensure consistent order (compact_01, compact_02, etc.)
+  compact_artifacts <- compact_artifacts[order(names(compact_artifacts))]
+  
+  # Extract file paths
+  compact_paths <- sapply(compact_artifacts, function(x) x$file_path)
+  compact_paths <- compact_paths[file.exists(compact_paths)]
+  
+  if (length(compact_paths) > 0) {
+    knitr::include_graphics(compact_paths)
+  } else {
+    cat("No compact plots found in registry.\n")
+  }
 } else {
-  cat("No compact plots found. Run the pipeline to generate plots.\n")
+  cat("Registry not available. Run pipeline with use_registry=TRUE.\n")
 }
 ```
 
@@ -172,14 +191,28 @@ Expanded ridgelines emphasize distribution shape with greater vertical separatio
 #| fig-width: 10
 #| layout-ncol: 2
 
-# Extract paths for expanded plots (indices 11-20)
-expanded_paths <- sapply(plot_results[11:20], function(x) x$output_path %||% NA)
-expanded_paths <- expanded_paths[!is.na(expanded_paths) & file.exists(expanded_paths)]
-
-if (length(expanded_paths) > 0) {
-  knitr::include_graphics(expanded_paths)
+# Phase 3: Load expanded plots from artifact registry
+if (!is.null(registry) && !is.null(registry$artifacts)) {
+  # Get expanded plot artifacts (IDs starting with "expanded_")
+  expanded_artifacts <- Filter(
+    function(x) x$type == "ridgeline_plots" && grepl("^expanded_", x$name),
+    registry$artifacts
+  )
+  
+  # Sort by name to ensure consistent order
+  expanded_artifacts <- expanded_artifacts[order(names(expanded_artifacts))]
+  
+  # Extract file paths
+  expanded_paths <- sapply(expanded_artifacts, function(x) x$file_path)
+  expanded_paths <- expanded_paths[file.exists(expanded_paths)]
+  
+  if (length(expanded_paths) > 0) {
+    knitr::include_graphics(expanded_paths)
+  } else {
+    cat("No expanded plots found. Run the pipeline to generate plots.\n")
+  }
 } else {
-  cat("No expanded plots found. Run the pipeline to generate plots.\n")
+  cat("No artifact registry available.\n")
 }
 ```
 

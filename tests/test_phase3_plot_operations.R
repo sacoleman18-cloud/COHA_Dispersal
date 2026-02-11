@@ -2,7 +2,7 @@
 # tests/test_phase3_plot_operations.R
 # ==============================================================================
 # PURPOSE: Unit tests for Phase 3B plot operations
-# DEPENDS: R/functions/phase3_plot_operations.R, ggplot2, ggridges
+# DEPENDS: R/functions/plot_operations.R, ggplot2, ggridges
 # ==============================================================================
 
 cat("\n[TEST] Phase 3B: Plot Operations\n")
@@ -13,8 +13,7 @@ source(here::here("R", "functions", "utilities.R"))
 source(here::here("R", "functions", "assertions.R"))
 source(here::here("R", "functions", "logging.R"))
 source(here::here("R", "functions", "robustness.R"))
-source(here::here("R", "functions", "plot_function.R"))
-source(here::here("R", "functions", "phase3_plot_operations.R"))
+source(here::here("R", "functions", "plot_operations.R"))
 
 # Load packages
 library(ggplot2)

@@ -138,31 +138,23 @@ for (fill in unique_fills) {
     cat(sprintf("## %s\n\n", palette_name))
     cat("::: {layout-ncol=2}\n\n")
     
-    # Compact - render image directly
-    compact_info <- get_plot_info(config_compact$id)
-    if (!is.null(compact_info$file_path) && file.exists(compact_info$file_path)) {
-      cat(sprintf("![](%s){fig-alt='Compact %s' width=100%%}\n\n", 
-                  compact_info$file_path, palette_name))
-    } else {
-      cat("*Plot not available*\n\n")
-    }
-    cat(sprintf("**Compact (0.85)**  \n"))
+    # Compact
+    cat("```{r}\n")
+    cat(sprintf("render_plot('%s')\n", config_compact$id))
+    cat("```\n")
+    cat(sprintf("**Compact (0.85)**  \n")
     cat(sprintf("Variant %d | Quality: %.0f/100\n\n", 
          which(names(plot_registry$ridgeline$variants) == config_compact$id),
-         compact_info$quality))
+         get_plot_info(config_compact$id)$quality))
     
-    # Expanded - render image directly
-    expanded_info <- get_plot_info(config_expanded$id)
-    if (!is.null(expanded_info$file_path) && file.exists(expanded_info$file_path)) {
-      cat(sprintf("![](%s){fig-alt='Expanded %s' width=100%%}\n\n", 
-                  expanded_info$file_path, palette_name))
-    } else {
-      cat("*Plot not available*\n\n")
-    }
-    cat(sprintf("**Expanded (2.25)**  \n"))
+    # Expanded
+    cat("```{r}\n")
+    cat(sprintf("render_plot('%s')\n", config_expanded$id))
+    cat("```\n")
+    cat(sprintf("**Expanded (2.25)**  \n")
     cat(sprintf("Variant %d | Quality: %.0f/100\n\n",
          which(names(plot_registry$ridgeline$variants) == config_expanded$id),
-         expanded_info$quality))
+         get_plot_info(config_expanded$id)$quality))
     
     cat(":::\n\n")
   }
@@ -187,16 +179,11 @@ for (i in seq_along(all_plot_ids)) {
   config <- plot_registry$ridgeline$variants[[plot_id]]
   
   cat(sprintf("## Variant %d: %s\n\n", i, config$display_name))
+  cat("```{r}\n")
+  cat(sprintf("render_plot('%s')\n", plot_id))
+  cat("```\n")
   
-  # Render image directly
   info <- get_plot_info(plot_id)
-  if (!is.null(info$file_path) && file.exists(info$file_path)) {
-    cat(sprintf("![](%s){fig-alt='%s' width=100%%}\n\n", 
-                info$file_path, config$display_name))
-  } else {
-    cat("*Plot not available*\n\n")
-  }
-  
   cat(sprintf("**Scale:** %g | **Palette:** %s | **Quality:** %.0f/100 | **Time:** %.2fs\n\n",
        config$scale, config$fill, info$quality, info$time))
 }

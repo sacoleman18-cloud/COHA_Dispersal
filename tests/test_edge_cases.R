@@ -3,7 +3,7 @@
 # tests/test_edge_cases.R
 # ==============================================================================
 # PURPOSE: Edge case testing (corrupt data, missing files, etc.)
-# DEPENDS: R/functions/phase3_data_operations.R
+# DEPENDS: R/functions/data_operations.R
 # ==============================================================================
 
 cat("\n[TEST] Edge Cases\n")
@@ -16,7 +16,7 @@ source(here::here("R", "functions", "assertions.R"))
 source(here::here("R", "functions", "logging.R"))
 source(here::here("R", "functions", "robustness.R"))
 source(here::here("R", "functions", "data_quality.R"))
-source(here::here("R", "functions", "phase3_data_operations.R"))
+source(here::here("R", "functions", "data_operations.R"))
 
 test_count <- 0
 passed_count <- 0

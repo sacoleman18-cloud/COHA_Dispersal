@@ -14,11 +14,11 @@
 # - ggridges (ridgeline geoms)
 # - here (path management)
 # - yaml (config parsing)
-# - R/functions/assertions.R
-# - R/functions/logging.R
-# - R/functions/config_loader.R
+# - R/functions/core/assertions.R
+# - R/functions/core/logging.R
+# - R/functions/core/config.R
 # - R/functions/plot_function.R
-# - R/config/ridgeline_config.R
+# - R/config/plot_registry.R (master plot configuration)
 #
 # ==============================================================================
 
@@ -31,22 +31,26 @@ for (pkg in required_packages) {
   }
 }
 
-# Source helper functions from R/functions/ (in order of dependency)
-source(here::here("R", "functions", "utilities.R"))
-source(here::here("R", "functions", "console.R"))
-source(here::here("R", "functions", "assertions.R"))
-source(here::here("R", "functions", "logging.R"))
-source(here::here("R", "functions", "config_loader.R"))
-source(here::here("R", "functions", "plot_function.R"))
+# Source core utilities (in order of dependency)
+source(here::here("R", "functions", "core", "utilities.R"))
+source(here::here("R", "functions", "core", "console.R"))
+source(here::here("R", "functions", "core", "logging.R"))
+source(here::here("R", "functions", "core", "assertions.R"))
+source(here::here("R", "functions", "core", "config.R"))
+
+# Phase 0b modules: Artifact registry system
+source(here::here("R", "functions", "core", "artifacts.R"))
+source(here::here("R", "functions", "output", "report.R"))
 
 # Phase 3 modules: robustness infrastructure (Phase 3A)
 source(here::here("R", "functions", "robustness.R"))
 source(here::here("R", "functions", "data_quality.R"))
-source(here::here("R", "functions", "phase3_data_operations.R"))
-source(here::here("R", "functions", "phase3_plot_operations.R"))
+source(here::here("R", "functions", "data_operations.R"))
+source(here::here("R", "functions", "plot_operations.R"))
 
 # Source plot type configurations
-source(here::here("R", "config", "ridgeline_config.R"))
+# Load plot registry (master configuration for all plot types)
+source(here::here("R", "config", "plot_registry.R"))
 
 #' Run Complete COHA Dispersal Analysis Pipeline
 #'
@@ -83,7 +87,8 @@ source(here::here("R", "config", "ridgeline_config.R"))
 run_pipeline <- function(data_path = "data/data.csv",
                          output_dir = "results/png",
                          configs = plot_configs,
-                         verbose = TRUE) {
+                         verbose = TRUE,
+                         use_registry = TRUE) {
   
   # Initialize tracking
   start_time <- Sys.time()
@@ -92,6 +97,23 @@ run_pipeline <- function(data_path = "data/data.csv",
   # Phase 3C: Initialize comprehensive result object
   pipeline_result <- create_result("run_pipeline", verbose)
   pipeline_result$phase_results <- list()
+  
+  # Phase 1: Initialize artifact registry
+  if (use_registry) {
+    if (verbose) log_message("Initializing artifact registry", "DEBUG", verbose = TRUE)
+    registry <- tryCatch(
+      init_artifact_registry(),
+      error = function(e) {
+        if (verbose) log_message(
+          sprintf("Registry init failed: %s", e$message),
+          "WARNING", verbose = TRUE
+        )
+        NULL
+      }
+    )
+  } else {
+    registry <- NULL
+  }
   
   if (verbose) print_stage_header("1", "Load & Validate Data")
   if (verbose) log_message("PIPELINE START", "INFO", verbose = TRUE)
@@ -191,6 +213,34 @@ run_pipeline <- function(data_path = "data/data.csv",
           "INFO", verbose = TRUE
         )
       }
+      
+      # Phase 1: Register data artifact
+      if (use_registry && !is.null(registry)) {
+        registry <- tryCatch(
+          register_artifact(
+            registry = registry,
+            artifact_name = "coha_dispersal_data",
+            artifact_type = "raw_data",
+            workflow = "data_load",
+            file_path = data_path_full,
+            input_artifacts = NULL,
+            metadata = list(
+              rows = data_result$rows,
+              columns = data_result$columns,
+              quality_score = data_result$quality_score
+            ),
+            data_hash = hash_dataframe(df),
+            quiet = !verbose
+          ),
+          error = function(e) {
+            if (verbose) log_message(
+              sprintf("Data registration failed: %s", e$message),
+              "WARNING", verbose = TRUE
+            )
+            registry
+          }
+        )
+      }
     },
     error = function(e) {
       pipeline_result <<- add_error(
@@ -235,8 +285,9 @@ run_pipeline <- function(data_path = "data/data.csv",
       enabled_types <- get_enabled_plot_types(config)
       
       if ("ridgeline" %in% enabled_types) {
-        # Load ridgeline configurations
-        plot_configs_active <- ridgeline_plot_configs
+        # Get ridgeline plot configurations from registry
+        ridgeline_variants <- plot_registry$ridgeline$variants
+        plot_configs_active <- ridgeline_variants
         
         # Create output directory
         ridgeline_output_dir <- here::here(
@@ -335,6 +386,99 @@ run_pipeline <- function(data_path = "data/data.csv",
             )
           }
         }
+        
+        # Phase 1: Register plot artifacts
+        if (use_registry && !is.null(registry) && length(plot_result$results) > 0) {
+          if (verbose) log_message(
+            "Registering plot artifacts", "DEBUG", verbose = TRUE
+          )
+          
+          for (i in seq_along(plot_result$results)) {
+            res <- plot_result$results[[i]]
+            if (res$status == "success" && !is.null(res$output_path)) {
+              registry <- tryCatch(
+                register_artifact(
+                  registry = registry,
+                  artifact_name = res$plot_id %||% sprintf("plot_%d", i),
+                  artifact_type = "ridgeline_plots",
+                  workflow = "plot_generation",
+                  file_path = res$output_path,
+                  input_artifacts = "coha_dispersal_data",
+                  metadata = list(
+                    scale_value = res$metadata$scale_value,
+                    palette = res$metadata$palette,
+                    quality_score = res$quality_score,
+                    generation_time = res$generation_time
+                  ),
+                  quiet = TRUE
+                ),
+                error = function(e) {
+                  if (verbose) log_message(
+                    sprintf("Plot registration failed for %s: %s",
+                           res$plot_id, e$message),
+                    "WARNING", verbose = TRUE
+                  )
+                  registry
+                }
+              )
+            }
+          }
+          
+          if (verbose) log_message(
+            sprintf("Registered %d plot artifacts", plot_result$plots_generated),
+            "INFO", verbose = TRUE
+          )
+        }
+        
+        # Phase 2: RDS Caching - Save plot results for report access
+        if (use_registry && !is.null(registry) && plot_result$plots_generated > 0) {
+          if (verbose) log_message(
+            "Caching plot results to RDS", "DEBUG", verbose = TRUE
+          )
+          
+          # Create RDS directory if needed
+          rds_dir <- here::here("results", "rds")
+          if (!dir.exists(rds_dir)) {
+            dir.create(rds_dir, recursive = TRUE, showWarnings = FALSE)
+          }
+          
+          # Generate RDS path with timestamp
+          timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
+          rds_path <- file.path(rds_dir, sprintf("plot_results_%s.rds", timestamp))
+          
+          # Save and register RDS
+          registry <- tryCatch(
+            save_and_register_rds(
+              object = plot_result$results,
+              file_path = rds_path,
+              artifact_type = "plot_objects",
+              workflow = "plot_generation",
+              registry = registry,
+              metadata = list(
+                n_plots = plot_result$plots_generated,
+                plots_failed = plot_result$plots_failed,
+                avg_quality = plot_result$quality_score,
+                generation_time_sec = plot_result$duration_secs
+              ),
+              verbose = verbose
+            ),
+            error = function(e) {
+              if (verbose) log_message(
+                sprintf("RDS caching failed: %s", e$message),
+                "WARNING", verbose = TRUE
+              )
+              registry
+            }
+          )
+          
+          if (verbose && file.exists(rds_path)) {
+            rds_size_mb <- file.info(rds_path)$size / (1024 * 1024)
+            log_message(
+              sprintf("Cached plot results to RDS (%.2f MB)", rds_size_mb),
+              "INFO", verbose = TRUE
+            )
+          }
+        }
       } else {
         if (verbose) {
           log_message("Ridgeline plots disabled in config", "INFO", verbose = TRUE)
@@ -430,6 +574,16 @@ run_pipeline <- function(data_path = "data/data.csv",
   pipeline_result$log_file <- log_file
   pipeline_result$pipeline_name <- "COHA Dispersal Ridgeline Analysis (Phase 3)"
   
+  # Phase 1: Store registry in result
+  if (use_registry && !is.null(registry)) {
+    pipeline_result$registry <- registry
+    if (verbose) log_message(
+      sprintf("Artifact registry contains %d artifacts",
+             length(registry$artifacts)),
+      "INFO", verbose = TRUE
+    )
+  }
+  
   if (verbose) {
     plots_generated <- pipeline_result$plots_generated %||% 0
     plots_failed <- pipeline_result$plots_failed %||% 0
@@ -469,60 +623,6 @@ run_pipeline <- function(data_path = "data/data.csv",
   }
   
   invisible(pipeline_result)
-}
-
-#' Generate Single Plot by Configuration ID
-#'
-#' @description
-#' Directly generate one plot without running full pipeline.
-#' Useful for interactive exploration and Quarto reports.
-#'
-#' @param plot_id Character. Plot ID (e.g., "compact_01").
-#' @param verbose Logical. Print progress. Default: FALSE.
-#'
-#' @return ggplot2 object
-#'
-#' @examples
-#' p <- generate_plot("compact_01")
-#' print(p)
-#'
-#' @export
-generate_plot <- function(plot_id,
-                          data_path = "data/data.csv",
-                          configs = ridgeline_plot_configs,
-                          verbose = FALSE) {
-  
-  if (verbose) {
-    log_message(sprintf("Generating %s", plot_id), "INFO", verbose = TRUE)
-  }
-  
-  # Load data
-  data_path_full <- here::here(data_path)
-  df <- readr::read_csv(data_path_full, show_col_types = FALSE)
-  
-  # Find config
-  config_item <- NULL
-  for (cfg in configs) {
-    if (cfg$id == plot_id) {
-      config_item <- cfg
-      break
-    }
-  }
-  
-  if (is.null(config_item)) {
-    stop(sprintf("Plot ID not found: %s", plot_id), call. = FALSE)
-  }
-  
-  # Create and return plot
-  create_ridgeline_plot(
-    data = df,
-    scale_value = config_item$scale_value,
-    line_height = config_item$line_height,
-    fill_palette = config_item$fill_palette,
-    color_palette = config_item$color_palette,
-    palette_type = config_item$palette_type,
-    verbose = verbose
-  )
 }
 
 #' List All Available Plot Configurations

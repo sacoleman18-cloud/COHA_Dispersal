@@ -13,3 +13,5 @@ ggridges
 knitr
 kableExtra
 yaml
+digest
+quarto

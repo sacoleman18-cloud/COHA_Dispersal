@@ -1,5 +1,5 @@
 # ==============================================================================
-# R/functions/phase3_data_operations.R
+# R/functions/data_operations.R
 # ==============================================================================
 # PURPOSE
 # -------
@@ -25,7 +25,7 @@
 #
 # USAGE
 # -----
-# source("R/functions/phase3_data_operations.R")
+# source("R/functions/data_operations.R")
 # result <- load_and_validate_data("data/data.csv", verbose = TRUE)
 # if (result$status == "success") { df <- result$data }
 #

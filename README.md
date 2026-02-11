@@ -73,17 +73,19 @@ COHA_Dispersal/
 - ✅ PIPELINE_GUIDE.md (comprehensive usage guide)
 - ⏳ Package documentation generation (roxygen2::roxygenise)
 
-### Phase 3: Robustness (Pending)
-- Structured error returns
-- Enhanced logging for all operations
-- Defensive checks in plot generation
-- Data quality reporting
+### Phase 3: Robustness ✅ Complete
+- ✅ Structured error returns
+- ✅ Enhanced logging for all operations
+- ✅ Defensive checks in plot generation
+- ✅ Data quality reporting
+- ✅ Artifact registry system
+- ✅ Registry-based report integration
 
-### Phase 4: Polish (Pending)
-- E2E testing across all 20 plots
-- Examples gallery
-- Code cleanup and optimization
-- GitHub release preparation
+### Phase 4: Release Management ✅ Complete
+- ✅ Release bundle creation (`create_release_bundle()`)
+- ✅ Artifact cleanup utility (`cleanup_old_artifacts()`)
+- ✅ Integrated release workflow
+- ✅ Documentation and usage examples
 ```
 
 ## Requirements
@@ -106,30 +108,97 @@ install.packages(c(
 
 ## Quick Start
 
-### 1. Load Pipeline
+### 1. Run Complete Analysis
 ```r
-source(here::here("R", "pipeline", "pipeline.R"))
+source("R/run_project.R")
+# Runs pipeline, generates plots, and renders HTML reports
+# Reports available in: results/reports/
 ```
 
-### 2. Run Complete Analysis
-```r
-# Generates all 20 ridgeline plots with status output
-result <- run_pipeline(verbose = TRUE)
+### 2. Create Release Bundle (Optional)
+```bash
+# From command line:
+Rscript R/run_project.R --bundle
+
+# Or from R console:
+source("R/functions/core/coha_release.R")
+bundle_path <- create_release_bundle(
+  include_raw_data = TRUE,
+  include_plots = TRUE,
+  include_reports = TRUE,
+  include_config = TRUE
+)
+# Creates: results/releases/coha_release_YYYYMMDD_HHMMSS.zip
 ```
 
-### 3. Check Results
+### 3. Clean Up Old Artifacts
 ```r
-# View plots
-list.files(here::here("results", "plots", "ridgeline", "variants"))
+source("R/functions/core/coha_release.R")
 
-# View log file
-show_log()  # Last 50 lines
+# Preview what would be deleted (dry run)
+cleanup_old_artifacts(keep_count = 3, dry_run = TRUE)
 
-# Check execution summary
-result$plots_generated      # 20
-result$duration_seconds     # ~45-60 seconds
-result$status               # "success"
+# Delete old plot files (keeps 3 most recent runs)
+cleanup_old_artifacts(keep_count = 3)
 ```
+
+## Artifact Registry & Release Management
+
+The project uses an artifact registry to track all generated outputs and ensure reproducibility.
+
+### What Gets Tracked
+
+The artifact registry (`R/config/artifact_registry.yaml`) tracks:
+- **Raw data**: `data.csv` with SHA256 hash for integrity verification
+- **Plot artifacts**: All 20 ridgeline plot PNG files with metadata
+- **Plot objects**: RDS cache files for faster report rendering
+- **Reports**: Generated HTML reports with dependencies
+
+### Benefits
+
+1. **Reproducibility**: Every output linked to its inputs with timestamps
+2. **Report consistency**: Reports always load exactly 20 plots from current run (no accumulation)
+3. **Release bundles**: One-command creation of shareable ZIP packages
+4. **Disk management**: Cleanup utility prevents plot file accumulation
+
+### Advanced Operations
+
+#### View Registry Contents
+```r
+library(yaml)
+registry <- read_yaml("R/config/artifact_registry.yaml")
+
+# Count artifacts by type
+table(sapply(registry$artifacts, function(x) x$type))
+
+# List all ridgeline plots
+plot_artifacts <- Filter(function(x) x$type == "ridgeline_plots", registry$artifacts)
+names(plot_artifacts)
+```
+
+#### Manual Artifact Registration
+```r
+source("R/functions/core/artifacts.R")
+
+registry <- init_artifact_registry()
+registry <- register_artifact(
+  registry = registry,
+  artifact_name = "my_custom_plot",
+  artifact_type = "plot",
+  workflow = "custom_analysis",
+  file_path = "path/to/plot.png",
+  metadata = list(description = "Custom analysis plot")
+)
+save_registry(registry)
+```
+
+#### Release Bundle Contents
+When you run `create_release_bundle()`, the ZIP contains:
+- `data/data.csv` - Original source data
+- `plots/` - All 20 ridgeline plot PNG files
+- `reports/` - Rendered HTML reports
+- `config/artifact_registry.yaml` - Full provenance tracking
+- `manifest.yaml` - Release metadata and summary
 
 ## Usage
 

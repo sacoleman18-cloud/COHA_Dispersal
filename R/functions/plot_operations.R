@@ -1,5 +1,5 @@
 # ==============================================================================
-# R/functions/phase3_plot_operations.R
+# R/functions/plot_operations.R
 # ==============================================================================
 # PURPOSE
 # -------
@@ -37,7 +37,7 @@ if (!require(dplyr, quietly = TRUE)) {
 
 # USAGE
 # -----
-# source("R/functions/phase3_plot_operations.R")
+# source("R/functions/plot_operations.R")
 # result <- generate_plot_safe(df, config, "compact_01", output_dir)
 # summary <- generate_all_plots_safe(df, configs, output_dir, verbose = TRUE)
 #
@@ -293,16 +293,33 @@ generate_plot_safe <- function(df,
           inherit.aes = FALSE
         ) +
         # Apply palette based on type
-        if (plot_config$palette_type == "brewer") {
+        (if (plot_config$palette_type == "custom") {
+          # Custom hex palette - interpolate if needed to match number of periods
+          hex_colors <- plot_config$fill_colors
+          n_needed <- length(period_levels)
+          if (length(hex_colors) < n_needed) {
+            # Interpolate to get enough colors
+            hex_colors <- grDevices::colorRampPalette(hex_colors)(n_needed)
+          }
+          ggplot2::scale_fill_manual(values = hex_colors)
+        } else if (plot_config$palette_type == "brewer") {
           ggplot2::scale_fill_brewer(palette = plot_config$fill %||% "Set2")
         } else {
           ggplot2::scale_fill_viridis_d(option = plot_config$fill %||% "plasma")
-        } +
-        if (plot_config$palette_type == "brewer") {
-          ggplot2::scale_color_brewer(palette = plot_config$color_palette %||% "Set2")
+        }) +
+        (if (plot_config$palette_type == "custom") {
+          # Custom hex palette for color (line)
+          hex_colors <- plot_config$color_colors
+          n_needed <- length(period_levels)
+          if (length(hex_colors) < n_needed) {
+            hex_colors <- grDevices::colorRampPalette(hex_colors)(n_needed)
+          }
+          ggplot2::scale_color_manual(values = hex_colors)
+        } else if (plot_config$palette_type == "brewer") {
+          ggplot2::scale_color_brewer(palette = plot_config$color %||% "Set2")
         } else {
-          ggplot2::scale_color_viridis_d(option = plot_config$color_palette %||% "plasma")
-        } +
+          ggplot2::scale_color_viridis_d(option = plot_config$color %||% "plasma")
+        }) +
         ggplot2::labs(
           title = plot_config$title %||% result$plot_id,
           x = "Mass (g)",
@@ -407,6 +424,13 @@ generate_plot_safe <- function(df,
   result$generation_time <- plot_generation_time
   result$duration_secs <- stop_timer(start_time)
   result$timestamp <- Sys.time()
+  
+  # Store plot config metadata for registry
+  result$metadata <- list(
+    scale_value = plot_config$scale,
+    palette = plot_config$fill,
+    palette_type = plot_config$palette_type
+  )
 
   if (verbose) {
     log_success(
@@ -667,6 +691,6 @@ generate_all_plots_safe <- function(df,
 }
 
 # ==============================================================================
-# END R/functions/phase3_plot_operations.R
+# END R/functions/plot_operations.R
 # ==============================================================================
 

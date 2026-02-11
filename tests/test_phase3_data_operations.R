@@ -2,7 +2,7 @@
 # tests/test_phase3_data_operations.R
 # ==============================================================================
 # PURPOSE: Unit tests for Phase 3A data quality and operations
-# DEPENDS: R/functions/data_quality.R, R/functions/phase3_data_operations.R
+# DEPENDS: R/functions/data_quality.R, R/functions/data_operations.R
 # ==============================================================================
 
 cat("\n[TEST] Phase 3A: Data Quality & Operations\n")
@@ -10,7 +10,7 @@ cat(strrep("=", 60), "\n")
 
 # Source required modules
 source(here::here("R", "functions", "data_quality.R"))
-source(here::here("R", "functions", "phase3_data_operations.R"))
+source(here::here("R", "functions", "data_operations.R"))
 source(here::here("R", "functions", "robustness.R"))
 source(here::here("R", "functions", "logging.R"))
 source(here::here("R", "functions", "assertions.R"))
