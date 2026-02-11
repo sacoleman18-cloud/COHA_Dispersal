@@ -14,23 +14,71 @@ This repository contains code and analysis for examining natal dispersal pattern
 ```
 COHA_Dispersal/
 ├── R/
-│   ├── plot_function.R          # Reusable ridgeline plot function
-│   ├── config.R                 # Plot configuration definitions
-│   ├── pipeline.R               # Main pipeline orchestrator
-│   └── ridgeline_plot.R         # Single plot generation script
+│   ├── functions/                    # Utility modules (Phase 1)
+│   │   ├── assertions.R              # 12 input validation functions
+│   │   ├── logging.R                 # 8 file/console logging functions
+│   │   ├── utilities.R               # 5 core utilities with safe I/O
+│   │   ├── console.R                 # 4 format console output functions
+│   │   ├── config_loader.R           # 6 YAML configuration functions
+│   │   └── plot_function.R           # Ridgeline plot generation
+│   ├── config/
+│   │   └── ridgeline_config.R        # 20 ridgeline plot specifications
+│   ├── pipeline/
+│   │   └── pipeline.R                # Main pipeline orchestrator
+│   └── [legacy scripts if any]
 ├── inst/
-│   └── ridgeline_report.qmd     # Quarto report with 20 plots
+│   └── config/
+│       └── study_parameters.yaml     # Project configuration (single source of truth)
 ├── data/
-│   └── data.csv                 # Raw dispersal and mass data
-├── docs/
-│   └── Natal Dispersal and Mass Analysis Notes.md
+│   └── data.csv                      # Raw dispersal and mass data (847 records)
+├── logs/
+│   └── pipeline_YYYY-MM-DD.log      # Audit trail (auto-created)
 ├── results/
-│   ├── png/                     # Generated plot images
-│   └── report/                  # Rendered HTML reports
-├── examples.R                   # Usage examples
+│   └── plots/ridgeline/variants/     # Generated plot images
+├── docs/
+│   ├── README.md                     # This file
+│   ├── COHA_PROJECT_STANDARDS.md     # Master standards document (Phase 1)
+│   ├── PHASE_1_FOUNDATION_STANDARDS.md  # Phase 1 implementation guide
+│   ├── PHASE_2_DOCUMENTATION_STANDARDS.md  # Phase 2 documentation guide
+│   ├── REFERENCE_CODE_INTEGRATION_PLAN.md  # Reference code analysis
+│   ├── STANDARDS_ADOPTION_AUDIT.md   # KPro standards audit (45 applicable)
+│   ├── PIPELINE_GUIDE.md             # Complete usage guide (Phase 2)
+│   └── Natal Dispersal and Mass Analysis Notes.md
 ├── .gitignore
 ├── COHA_Dispersal.Rproj
-└── README.md                    # This file
+└── README.md                         # This file
+```
+
+## Phase Status
+
+### Phase 1: Foundation ✅ Complete
+- ✅ Comprehensive assertions module (12 functions)
+- ✅ File/console logging system (8 functions)
+- ✅ Safe I/O utilities (5 functions)
+- ✅ Console formatting (4 functions)
+- ✅ YAML configuration system (6 functions)
+- ✅ Pipeline orchestrator with professional output
+- ✅ 20 ridgeline plot specifications
+- ✅ Standards documents (3 files)
+
+### Phase 2: Documentation ✅ Complete
+- ✅ Comprehensive Roxygen2 documentation (39+ functions)
+- ✅ File headers with PURPOSE, DEPENDS ON, INPUTS, OUTPUTS, USAGE, CHANGELOG
+- ✅ PHASE_2_DOCUMENTATION_STANDARDS.md
+- ✅ PIPELINE_GUIDE.md (comprehensive usage guide)
+- ⏳ Package documentation generation (roxygen2::roxygenise)
+
+### Phase 3: Robustness (Pending)
+- Structured error returns
+- Enhanced logging for all operations
+- Defensive checks in plot generation
+- Data quality reporting
+
+### Phase 4: Polish (Pending)
+- E2E testing across all 20 plots
+- Examples gallery
+- Code cleanup and optimization
+- GitHub release preparation
 ```
 
 ## Requirements
@@ -38,14 +86,45 @@ COHA_Dispersal/
 ### R Packages
 
 ```r
-install.packages(c("tidyverse", "ggridges", "ggplot2", "quarto"))
+install.packages(c(
+  "tidyverse", "ggplot2", "ggridges", # Visualization
+  "yaml", "readr",                     # Configuration and I/O
+  "here"                               # Path management
+))
 ```
 
 ### Software
 
 - R (≥ 4.0)
 - RStudio (recommended)
-- Quarto CLI (for rendering reports)
+- Quarto (optional, for reports)
+
+## Quick Start
+
+### 1. Load Pipeline
+```r
+source(here::here("R", "pipeline", "pipeline.R"))
+```
+
+### 2. Run Complete Analysis
+```r
+# Generates all 20 ridgeline plots with status output
+result <- run_pipeline(verbose = TRUE)
+```
+
+### 3. Check Results
+```r
+# View plots
+list.files(here::here("results", "plots", "ridgeline", "variants"))
+
+# View log file
+show_log()  # Last 50 lines
+
+# Check execution summary
+result$plots_generated      # 20
+result$duration_seconds     # ~45-60 seconds
+result$status               # "success"
+```
 
 ## Usage
 

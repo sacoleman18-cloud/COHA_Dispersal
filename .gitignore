@@ -1,20 +1,44 @@
-# Ignore R-specific files
+# R-specific files
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
 
-# Ignore output files
-results/png/*.png
-results/report/*.html
-results/report/*.pdf
-results/report/ridgeline_report_files/
+# Pipeline outputs (PHASE 1+)
+logs/
+results/
+.Rhistory
+.RData
+.Rproj.user/
 
-# Ignore OS-specific files
+# Generated files
+results/plots/**/*.png
+results/plots/**/*.svg
+results/plots/**/*.pdf
+results/reports/**/*.html
+results/reports/**/*.md
+results/data/processed/
+
+# Temporary files
+*.tmp
+*.temp
+*~
 .DS_Store
 Thumbs.db
-
-# Ignore temporary files
-*~
 *.swp
 *.swo
+
+# IDE
+.vscode/
+.idea/
+
+# Python (if used)
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+
+# Node (if used)
+node_modules/
+npm-debug.log

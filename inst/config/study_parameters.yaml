@@ -1,0 +1,217 @@
+---
+# inst/config/study_parameters.yaml
+# =============================================================================
+# COHA DISPERSAL ANALYSIS: Project Configuration
+# =============================================================================
+# This is the single source of truth for all project settings.
+# No hardcoded values in code - everything comes from this file.
+# =============================================================================
+
+# Project Identity
+project:
+  name: "COHA Dispersal Analysis"
+  version: "1.0"
+  description: "Publication-ready analyses of Cooper's Hawk natal dispersal patterns"
+  authors:
+    - "Analysis Team"
+  created: "2026-02-10"
+
+# Data Source and Requirements
+data:
+  # Input file location (relative to project root)
+  source_file: "data/data.csv"
+  
+  # Required columns that must exist
+  required_columns:
+    - "mass"
+    - "year"
+    - "dispersed"
+    - "origin"
+  
+  # Data type validation
+  column_types:
+    mass: "numeric"
+    year: "numeric"
+    dispersed: "character"
+    origin: "character"
+
+# Output Path Configuration
+paths:
+  # All paths relative to project root
+  plots_base: "results/plots"
+  reports_base: "results/reports"
+  logs_dir: "logs"
+  config_dir: "inst/config"
+  data_processed: "results/data/processed"
+
+# Plot Type Configuration
+# Enable/disable each plot type and its settings
+plot_types:
+  ridgeline:
+    enabled: true
+    name: "Ridgeline Density Plots"
+    description: "6-year period distributions with state means"
+    
+    # Location of plot configuration
+    config_file: "R/config/ridgeline_config.R"
+    
+    # Report template
+    report_template: "inst/reports/ridgeline_comprehensive.qmd"
+    
+    # Number of variants
+    num_variants: 20
+    
+    # Output directory (under plots_base)
+    output_subdir: "ridgeline"
+    
+    # Default parameters
+    defaults:
+      dpi: 300
+      width_inches: 8
+      height_inches: 5
+  
+  boxplot:
+    enabled: false
+    name: "Box & Whisker with Jitter"
+    description: "6-year period distributions with individual data points"
+    config_file: "R/config/boxplot_config.R"
+    report_template: "inst/reports/boxplot_comprehensive.qmd"
+    num_variants: 10
+    output_subdir: "boxplot"
+    defaults:
+      dpi: 300
+      width_inches: 8
+      height_inches: 5
+
+# Global Defaults
+defaults:
+  # Console output
+  verbose: false
+  
+  # Generate outputs?
+  save_plots: true
+  generate_reports: true
+  
+  # Plot quality
+  dpi: 300
+  format: ["png"]  # Can add "svg" for vector
+  
+  # Plotting parameters
+  alpha_fill: 0.7          # Density fill transparency
+  point_size: 2            # Point marker size
+  line_width: 0.8          # Line width for means
+
+# Palette Configuration
+palettes:
+  # Viridis variants (for spectral/continuous data)
+  viridis:
+    enabled: true
+    name: "Viridis Standard"
+  
+  plasma:
+    enabled: true
+    name: "Viridis Plasma"
+  
+  inferno:
+    enabled: true
+    name: "Viridis Inferno"
+  
+  magma:
+    enabled: true
+    name: "Viridis Magma"
+  
+  cividis:
+    enabled: true
+    name: "Viridis Cividis (Colorblind)"
+  
+  rocket:
+    enabled: true
+    name: "Viridis Rocket"
+  
+  mako:
+    enabled: true
+    name: "Viridis Mako"
+  
+  turbo:
+    enabled: true
+    name: "Viridis Turbo"
+  
+  # Brewer categorical palettes
+  set2:
+    enabled: true
+    name: "ColorBrewer Set2"
+  
+  dark2:
+    enabled: true
+    name: "ColorBrewer Dark2"
+
+# Logging Configuration
+logging:
+  enabled: true
+  log_dir: "logs"
+  log_filename_pattern: "pipeline_%Y-%m-%d.log"
+  #  %Y = 4-digit year
+  #  %m = 2-digit month
+  #  %d = 2-digit day
+  
+  levels:
+    - "ERROR"
+    - "WARN"
+    - "INFO"
+    - "DEBUG"
+
+# Analysis Parameters
+analysis:
+  # 6-year period bins
+  period_width: 6
+  period_start_year: 1980
+  period_end_year: 2027
+  
+  # States of interest
+  states:
+    - "Unknown"      # For ridgeline distributions
+    - "Wisconsin"    # For state mean comparison
+
+# Report Configuration
+report:
+  # Generate comprehensive reports?
+  generate_comprehensive: true
+  
+  # Should reports include technical appendix?
+  include_appendix: true
+  
+  # Report output format
+  format: "html"
+  
+  # Report theme
+  theme: "default"
+  
+  # Number of variants to include in gallery
+  gallery_variants: 20
+
+# Quality Assurance
+qa:
+  # Should pipeline verify all outputs?
+  verify_outputs: true
+  
+  # Should pipeline check for determinism?
+  check_determinism: false  # Set true to run pipeline twice and compare
+  
+  # Log file before sending to production?
+  create_qa_log: true
+
+# Metadata for Publication
+publication:
+  # Will be included in report headers
+  journal_target: "Ornithological Research"
+  
+  data_availability:
+    statement: "Data available upon request from [contact]"
+    url: null
+  
+  reproducibility:
+    r_version: "4.3.0"  # Required R version
+    packages_documented: true
+
+# End of Configuration
+# Last Updated: 2026-02-10
