@@ -17,12 +17,12 @@ COHA_Dispersal/
 │   ├── functions/                    # Utility modules (Phase 1)
 │   │   ├── assertions.R              # 12 input validation functions
 │   │   ├── logging.R                 # 8 file/console logging functions
-│   │   ├── utilities.R               # 5 core utilities with safe I/O
-│   │   ├── console.R                 # 4 format console output functions
-│   │   ├── config_loader.R           # 6 YAML configuration functions
+│   │   ├── utilities.R               # Core utilities with safe I/O
+│   │   ├── console.R                 # Format console output functions
+│   │   ├── config_loader.R           # YAML configuration functions
 │   │   └── plot_function.R           # Ridgeline plot generation
 │   ├── config/
-│   │   └── ridgeline_config.R        # 20 ridgeline plot specifications
+│   │   └── plot_registry.R           # Master plot configuration (all variants)
 │   ├── pipeline/
 │   │   └── pipeline.R                # Main pipeline orchestrator
 │   ├── run_project.R                 # Single entrypoint (run + reports)
@@ -228,7 +228,7 @@ print(p)
 
 **`run_pipeline()`** - Main function to generate all plots
 - `data_path`: Path to data CSV (default: "data/data.csv")
-- `output_dir`: Output directory (default: "results/png")
+- Plots automatically output to `results/plots/ridgeline/variants/`
 - `configs`: Plot configurations (default: from config.R)
 - `save_plots`: Whether to save plots (default: TRUE)
 - `verbose`: Print progress messages (default: TRUE)
@@ -289,7 +289,7 @@ create_ridgeline_plot(data, scale_value = 2.25, line_height = 1,
 
 To add a new plot to the pipeline:
 
-1. **Edit `R/config/ridgeline_config.R`**: Add a new configuration to the `ridgeline_plot_configs` list
+1. **Edit `R/config/plot_registry.R`**: Add a new variant to `plot_registry$ridgeline$variants`
 
 ```r
 list(
@@ -310,7 +310,7 @@ source("R/pipeline/pipeline.R")
 run_pipeline()
 ```
 
-3. **Add to report** (optional): Include in `reports/plot_gallery.qmd`
+3. **Gallery updates automatically** - No manual edits needed to `reports/plot_gallery.qmd`
 
 ```r
 generate_plot("custom_01")
@@ -342,7 +342,7 @@ Each ridgeline plot includes:
 
 The analysis uses a modular pipeline architecture:
 
-1. **`R/config/ridgeline_config.R`** - Defines all plot specifications in a structured list
+1. **`R/config/plot_registry.R`** - Master configuration defining all plot variants
 2. **`R/functions/plot_function.R`** - Core plotting function (reusable)
 3. **`R/pipeline/pipeline.R`** - Orchestrates plot generation from configs
 4. **`reports/full_analysis_report.qmd`** - Quarto report references plots by ID

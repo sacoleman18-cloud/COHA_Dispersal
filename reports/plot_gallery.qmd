@@ -61,18 +61,6 @@ if (!is.null(artifact_registry$artifacts)) {
   }
 }
 
-# Render plot by ID (e.g., "compact_01")
-render_plot <- function(plot_id, alt_text = "Plot not available") {
-  if (plot_id %in% names(plot_file_lookup)) {
-    path <- plot_file_lookup[[plot_id]]$file_path
-    if (!is.null(path) && file.exists(path)) {
-      return(knitr::include_graphics(path))
-    }
-  }
-  cat(sprintf("⚠ %s: %s\n", plot_id, alt_text))
-  return(invisible(NULL))
-}
-
 # Get plot info
 get_plot_info <- function(plot_id) {
   if (plot_id %in% names(plot_file_lookup)) {
@@ -110,10 +98,7 @@ Compare compact (left) vs expanded (right) side-by-side for each palette.
 ```{r comparison-tabs}
 #| results: asis
 
-# Get palettes by grouping plots
-plots_by_palette <- get_plots_grouped(group_by = "fill", plot_type = "ridgeline")
-
-# Create tabs for each palette (limit to one of each fill color)
+# Get unique fill palettes
 unique_fills <- unique(sapply(plot_registry$ridgeline$variants, function(x) x$fill))
 
 cat("::: {.panel-tabset}\n\n")
@@ -138,31 +123,25 @@ for (fill in unique_fills) {
     cat(sprintf("## %s\n\n", palette_name))
     cat("::: {layout-ncol=2}\n\n")
     
-    # Compact - render image directly
-    compact_info <- get_plot_info(config_compact$id)
-    if (!is.null(compact_info$file_path) && file.exists(compact_info$file_path)) {
-      cat(sprintf("![](%s){fig-alt='Compact %s' width=100%%}\n\n", 
-                  compact_info$file_path, palette_name))
-    } else {
-      cat("*Plot not available*\n\n")
+    # Compact image
+    info_compact <- get_plot_info(config_compact$id)
+    if (!is.null(info_compact$file_path) && file.exists(info_compact$file_path)) {
+      cat(sprintf("![](%s){fig-alt='%s - Compact' width=100%%}\n\n", 
+                  info_compact$file_path, config_compact$display_name))
     }
-    cat(sprintf("**Compact (0.85)**  \n"))
-    cat(sprintf("Variant %d | Quality: %.0f/100\n\n", 
+    cat(sprintf("**Compact (0.85)**  \nVariant %d | Quality: %.0f/100\n\n", 
          which(names(plot_registry$ridgeline$variants) == config_compact$id),
-         compact_info$quality))
+         info_compact$quality))
     
-    # Expanded - render image directly
-    expanded_info <- get_plot_info(config_expanded$id)
-    if (!is.null(expanded_info$file_path) && file.exists(expanded_info$file_path)) {
-      cat(sprintf("![](%s){fig-alt='Expanded %s' width=100%%}\n\n", 
-                  expanded_info$file_path, palette_name))
-    } else {
-      cat("*Plot not available*\n\n")
+    # Expanded image
+    info_expanded <- get_plot_info(config_expanded$id)
+    if (!is.null(info_expanded$file_path) && file.exists(info_expanded$file_path)) {
+      cat(sprintf("![](%s){fig-alt='%s - Expanded' width=100%%}\n\n",
+                  info_expanded$file_path, config_expanded$display_name))
     }
-    cat(sprintf("**Expanded (2.25)**  \n"))
-    cat(sprintf("Variant %d | Quality: %.0f/100\n\n",
+    cat(sprintf("**Expanded (2.25)**  \nVariant %d | Quality: %.0f/100\n\n",
          which(names(plot_registry$ridgeline$variants) == config_expanded$id),
-         expanded_info$quality))
+         info_expanded$quality))
     
     cat(":::\n\n")
   }

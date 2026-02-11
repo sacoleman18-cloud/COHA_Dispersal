@@ -85,8 +85,6 @@ source(here::here("R", "config", "plot_registry.R"))
 #'
 #' @export
 run_pipeline <- function(data_path = "data/data.csv",
-                         output_dir = "results/png",
-                         configs = plot_configs,
                          verbose = TRUE,
                          use_registry = TRUE) {
   
@@ -625,28 +623,4 @@ run_pipeline <- function(data_path = "data/data.csv",
   invisible(pipeline_result)
 }
 
-#' List All Available Plot Configurations
-#'
-#' @description
-#' Returns data frame describing all ridgeline plot variants.
-#'
-#' @return Data frame with columns: id, name, scale_value, line_height, palette, palette_type
-#'
-#' @examples
-#' plots_df <- list_plots()
-#' head(plots_df)
-#'
-#' @export
-list_plots <- function() {
-  do.call(rbind, lapply(ridgeline_plot_configs, function(x) {
-    data.frame(
-      id = x$id,
-      name = x$name,
-      scale_value = x$scale_value,
-      line_height = x$line_height,
-      palette = x$fill_palette,
-      palette_type = x$palette_type,
-      stringsAsFactors = FALSE
-    )
-  }))
-}
+

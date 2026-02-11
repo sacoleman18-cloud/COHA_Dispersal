@@ -42,7 +42,6 @@ paths:
   reports_base: "results/reports"
   logs_dir: "logs"
   config_dir: "inst/config"
-  data_processed: "results/data/processed"
 
 # Plot Type Configuration
 # Enable/disable each plot type and its settings
@@ -52,8 +51,8 @@ plot_types:
     name: "Ridgeline Density Plots"
     description: "6-year period distributions with state means"
     
-    # Location of plot configuration
-    config_file: "R/config/ridgeline_config.R"
+    # Location of plot configuration (now centralized in plot_registry.R)
+    config_file: "R/config/plot_registry.R"
     
     # Report template
     report_template: "inst/reports/ridgeline_comprehensive.qmd"

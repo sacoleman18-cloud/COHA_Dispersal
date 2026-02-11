@@ -17,7 +17,6 @@ results/plots/**/*.svg
 results/plots/**/*.pdf
 results/reports/**/*.html
 results/reports/**/*.md
-results/data/processed/
 
 # Temporary files
 *.tmp
