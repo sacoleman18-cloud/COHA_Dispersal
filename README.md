@@ -25,6 +25,7 @@ COHA_Dispersal/
 │   │   └── ridgeline_config.R        # 20 ridgeline plot specifications
 │   ├── pipeline/
 │   │   └── pipeline.R                # Main pipeline orchestrator
+│   ├── run_project.R                 # Single entrypoint (run + reports)
 │   └── [legacy scripts if any]
 ├── inst/
 │   └── config/
@@ -35,6 +36,10 @@ COHA_Dispersal/
 │   └── pipeline_YYYY-MM-DD.log      # Audit trail (auto-created)
 ├── results/
 │   └── plots/ridgeline/variants/     # Generated plot images
+├── reports/                          # Quarto report sources
+├── tests/                            # Test scripts
+│   ├── helpers/                      # Helper tests moved from root
+│   └── run_all_tests.R               # Test runner
 ├── docs/
 │   ├── README.md                     # This file
 │   ├── COHA_PROJECT_STANDARDS.md     # Master standards document (Phase 1)
@@ -130,18 +135,14 @@ result$status               # "success"
 
 ### Quick Start
 
-See `examples.R` for detailed usage examples:
-
-```r
-source("examples.R")
-```
+See `R/run_project.R` for the single entrypoint script.
 
 ### Run Complete Pipeline
 
 Generate all plots at once using the automated pipeline:
 
 ```r
-source("R/pipeline.R")
+source("R/pipeline/pipeline.R")
 
 # Run pipeline (generates all 20 plots)
 plots <- run_pipeline()
@@ -180,19 +181,21 @@ This creates a ridgeline plot showing:
 
 ### Generate Full Report
 
-Render the complete Quarto report with 20 plots:
+Render the Quarto reports:
 
 ```r
-quarto::quarto_render("inst/ridgeline_report.qmd")
+quarto::quarto_render("reports/full_analysis_report.qmd", output_dir = "results/reports")
+quarto::quarto_render("reports/plot_gallery.qmd", output_dir = "results/reports")
 ```
 
 Or via terminal:
 
 ```bash
-quarto render inst/ridgeline_report.qmd
+quarto render reports/full_analysis_report.qmd --output-dir results/reports
+quarto render reports/plot_gallery.qmd --output-dir results/reports
 ```
 
-Reports are saved to `results/report/`
+Reports are saved to `results/reports/`
 
 ### Use Plot Function
 
@@ -217,7 +220,7 @@ create_ridgeline_plot(data, scale_value = 2.25, line_height = 1,
 
 To add a new plot to the pipeline:
 
-1. **Edit `R/config.R`**: Add a new configuration to the `plot_configs` list
+1. **Edit `R/config/ridgeline_config.R`**: Add a new configuration to the `ridgeline_plot_configs` list
 
 ```r
 list(
@@ -234,11 +237,11 @@ list(
 2. **Run the pipeline**: Your new plot will be automatically generated
 
 ```r
-source("R/pipeline.R")
+source("R/pipeline/pipeline.R")
 run_pipeline()
 ```
 
-3. **Add to report** (optional): Include in `inst/ridgeline_report.qmd`
+3. **Add to report** (optional): Include in `reports/plot_gallery.qmd`
 
 ```r
 generate_plot("custom_01")
@@ -252,7 +255,7 @@ The `data/data.csv` file contains:
 |--------|-------------|
 | `mass` | Bird mass in grams |
 | `year` | Year of observation |
-| `dispsersed` | Dispersal status (Unknown, Wisconsin, etc.) |
+| `dispersed` | Dispersal status (Unknown, Wisconsin, etc.) |
 
 ## Plot Components
 
@@ -270,10 +273,10 @@ Each ridgeline plot includes:
 
 The analysis uses a modular pipeline architecture:
 
-1. **`R/config.R`** - Defines all plot specifications in a structured list
-2. **`R/plot_function.R`** - Core plotting function (reusable)
-3. **`R/pipeline.R`** - Orchestrates plot generation from configs
-4. **`inst/ridgeline_report.qmd`** - Quarto report references plots by ID
+1. **`R/config/ridgeline_config.R`** - Defines all plot specifications in a structured list
+2. **`R/functions/plot_function.R`** - Core plotting function (reusable)
+3. **`R/pipeline/pipeline.R`** - Orchestrates plot generation from configs
+4. **`reports/full_analysis_report.qmd`** - Quarto report references plots by ID
 
 This design allows you to:
 - Add new plots by editing only `config.R`

@@ -1,0 +1,611 @@
+---
+title: "COHA Ridgeline Plot Gallery"
+subtitle: "20 Visualization Variants - Complete Showcase"
+author: "COHA Research Team"
+date: "`r Sys.Date()`"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    code-fold: show
+    theme: flatly
+    embed-resources: true
+    grid:
+      body-width: 1200px
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r setup}
+#| include: false
+
+library(here)
+library(tidyverse)
+library(ggplot2)
+library(ggridges)
+library(knitr)
+library(kableExtra)
+
+# Source pipeline
+source(here::here("R", "pipeline", "pipeline.R"))
+```
+
+# Overview
+
+This gallery showcases **20 ridgeline plot variants** for visualizing Cooper's Hawk (COHA) mass distributions across years. Each variant explores different aesthetic combinations of scale, palette, and visual encoding.
+
+```{r run-pipeline}
+#| cache: true
+
+# Generate all plots
+result <- run_pipeline(verbose = FALSE)
+plot_results <- result$phase_results$plot_generation$results
+
+render_plot <- function(index, alt_text = "Plot not available") {
+  if (length(plot_results) < index) {
+    cat(alt_text, "\n")
+    return(invisible(NULL))
+  }
+  path <- plot_results[[index]]$output_path %||% ""
+  if (nzchar(path) && file.exists(path)) {
+    knitr::include_graphics(path)
+  } else {
+    cat(alt_text, "\n")
+  }
+}
+```
+
+**Total Variants Generated:** `r length(plot_results)`  
+**Success Rate:** `r sprintf("%.0f%%", result$phase_results$plot_generation$success_rate)`  
+**Average Quality:** `r sprintf("%.0f/100", result$phase_results$plot_generation$quality_score)`
+
+---
+
+# Compact Variants (Scale: 0.85)
+
+Compact ridgelines minimize overlap for temporal density visualization.
+
+::: {.panel-tabset}
+
+## Variant 01: Compact + Plasma
+
+```{r compact-01}
+#| fig-height: 6
+#| fig-width: 8
+
+render_plot(1, "Plot generation failed")
+```
+
+**Quality:** `r sprintf("%.0f/100", plot_results[[1]]$quality_score %||% 0)`  
+**Time:** `r sprintf("%.2fs", plot_results[[1]]$generation_time %||% 0)`  
+**File:** `r basename(plot_results[[1]]$output_path %||% "N/A")`
+
+## Variant 02: Compact + Viridis
+
+```{r compact-02}
+#| fig-height: 6
+#| fig-width: 8
+
+render_plot(2)
+```
+
+**Quality:** `r sprintf("%.0f/100", plot_results[[2]]$quality_score %||% 0)`
+
+## Variant 03: Compact + Magma
+
+```{r compact-03}
+#| fig-height: 6
+#| fig-width: 8
+
+render_plot(3)
+```
+
+**Quality:** `r sprintf("%.0f/100", plot_results[[3]]$quality_score %||% 0)`
+
+## Variant 04: Compact + Inferno
+
+```{r compact-04}
+#| fig-height: 6
+#| fig-width: 8
+
+render_plot(4)
+```
+
+**Quality:** `r sprintf("%.0f/100", plot_results[[4]]$quality_score %||% 0)`
+
+## Variant 05: Compact + Cividis
+
+```{r compact-05}
+#| fig-height: 6
+#| fig-width: 8
+
+render_plot(5)
+```
+
+**Quality:** `r sprintf("%.0f/100", plot_results[[5]]$quality_score %||% 0)`
+
+## Variant 06: Compact + Rocket
+
+```{r compact-06}
+#| fig-height: 6
+#| fig-width: 8
+
+render_plot(6)
+```
+
+**Quality:** `r sprintf("%.0f/100", plot_results[[6]]$quality_score %||% 0)`
+
+## Variant 07: Compact + Mako
+
+```{r compact-07}
+#| fig-height: 6
+#| fig-width: 8
+
+render_plot(7)
+```
+
+**Quality:** `r sprintf("%.0f/100", plot_results[[7]]$quality_score %||% 0)`
+
+## Variant 08: Compact + Turbo
+
+```{r compact-08}
+#| fig-height: 6
+#| fig-width: 8
+
+render_plot(8)
+```
+
+**Quality:** `r sprintf("%.0f/100", plot_results[[8]]$quality_score %||% 0)`
+
+## Variant 09: Compact + Set2
+
+```{r compact-09}
+#| fig-height: 6
+#| fig-width: 8
+
+render_plot(9)
+```
+
+**Quality:** `r sprintf("%.0f/100", plot_results[[9]]$quality_score %||% 0)`
+
+## Variant 10: Compact + Dark2
+
+```{r compact-10}
+#| fig-height: 6
+#| fig-width: 8
+
+render_plot(10)
+```
+
+**Quality:** `r sprintf("%.0f/100", plot_results[[10]]$quality_score %||% 0)`
+
+:::
+
+---
+
+# Expanded Variants (Scale: 2.25)
+
+Expanded ridgelines emphasize distribution shape with vertical separation.
+
+::: {.panel-tabset}
+
+## Variant 11: Expanded + Plasma
+
+```{r expanded-01}
+#| fig-height: 6
+#| fig-width: 8
+
+render_plot(11)
+```
+
+**Quality:** `r sprintf("%.0f/100", plot_results[[11]]$quality_score %||% 0)`  
+**Time:** `r sprintf("%.2fs", plot_results[[11]]$generation_time %||% 0)`
+
+## Variant 12: Expanded + Viridis
+
+```{r expanded-02}
+#| fig-height: 6
+#| fig-width: 8
+
+render_plot(12)
+```
+
+**Quality:** `r sprintf("%.0f/100", plot_results[[12]]$quality_score %||% 0)`
+
+## Variant 13: Expanded + Magma
+
+```{r expanded-03}
+#| fig-height: 6
+#| fig-width: 8
+
+render_plot(13)
+```
+
+**Quality:** `r sprintf("%.0f/100", plot_results[[13]]$quality_score %||% 0)`
+
+## Variant 14: Expanded + Inferno
+
+```{r expanded-04}
+#| fig-height: 6
+#| fig-width: 8
+
+render_plot(14)
+```
+
+**Quality:** `r sprintf("%.0f/100", plot_results[[14]]$quality_score %||% 0)`
+
+## Variant 15: Expanded + Cividis
+
+```{r expanded-05}
+#| fig-height: 6
+#| fig-width: 8
+
+render_plot(15)
+```
+
+**Quality:** `r sprintf("%.0f/100", plot_results[[15]]$quality_score %||% 0)`
+
+## Variant 16: Expanded + Rocket
+
+```{r expanded-06}
+#| fig-height: 6
+#| fig-width: 8
+
+render_plot(16)
+```
+
+**Quality:** `r sprintf("%.0f/100", plot_results[[16]]$quality_score %||% 0)`
+
+## Variant 17: Expanded + Mako
+
+```{r expanded-07}
+#| fig-height: 6
+#| fig-width: 8
+
+render_plot(17)
+```
+
+**Quality:** `r sprintf("%.0f/100", plot_results[[17]]$quality_score %||% 0)`
+
+## Variant 18: Expanded + Turbo
+
+```{r expanded-08}
+#| fig-height: 6
+#| fig-width: 8
+
+render_plot(18)
+```
+
+**Quality:** `r sprintf("%.0f/100", plot_results[[18]]$quality_score %||% 0)`
+
+## Variant 19: Expanded + Set2
+
+```{r expanded-09}
+#| fig-height: 6
+#| fig-width: 8
+
+render_plot(19)
+```
+
+**Quality:** `r sprintf("%.0f/100", plot_results[[19]]$quality_score %||% 0)`
+
+## Variant 20: Expanded + Dark2
+
+```{r expanded-10}
+#| fig-height: 6
+#| fig-width: 8
+
+render_plot(20)
+```
+
+**Quality:** `r sprintf("%.0f/100", plot_results[[20]]$quality_score %||% 0)`
+
+:::
+
+---
+
+# Palette Comparison
+
+Direct comparison of all 10 palettes at fixed scale (Compact: 0.85).
+
+```{r palette-comparison}
+#| echo: false
+
+# Show all 10 compact variants
+palette_names <- c("Plasma", "Viridis", "Magma", "Inferno", "Cividis", "Rocket", "Mako", "Turbo", "Set2", "Dark2")
+for (i in 1:10) {
+  idx <- i
+  cat(sprintf("\n### Palette %d: %s\n\n", i, palette_names[i]))
+  cat(sprintf("**Compact Variant %02d** | Quality: %.0f/100 | Time: %.2fs\n\n", i, 
+              plot_results[[idx]]$quality_score %||% 0,
+              plot_results[[idx]]$generation_time %||% 0))
+  render_plot(idx)
+  cat("\n")
+}
+```
+
+---
+
+# Scale Comparison
+
+Compare compact (0.85) vs expanded (2.25) at fixed palette.
+
+::: {.panel-tabset}
+
+## Plasma Palette
+
+```{r scale-plasma}
+#| fig-height: 6
+#| fig-width: 8
+
+cat("**Compact (Scale: 0.85) - Plasma**\n\n")
+render_plot(1)
+```
+
+```{r scale-plasma-expanded}
+#| fig-height: 6
+#| fig-width: 8
+
+cat("\n**Expanded (Scale: 2.25) - Plasma**\n\n")
+render_plot(11)
+```
+
+## Viridis Palette
+
+```{r scale-viridis}
+#| fig-height: 6
+#| fig-width: 8
+
+cat("**Compact (Scale: 0.85) - Viridis**\n\n")
+render_plot(2)
+```
+
+```{r scale-viridis-expanded}
+#| fig-height: 6
+#| fig-width: 8
+
+cat("\n**Expanded (Scale: 2.25) - Viridis**\n\n")
+render_plot(12)
+```
+
+## Magma Palette
+
+```{r scale-magma}
+#| fig-height: 6
+#| fig-width: 8
+
+cat("**Compact (Scale: 0.85) - Magma**\n\n")
+render_plot(3)
+```
+
+```{r scale-magma-expanded}
+#| fig-height: 6
+#| fig-width: 8
+
+cat("\n**Expanded (Scale: 2.25) - Magma**\n\n")
+render_plot(13)
+```
+
+## Inferno Palette
+
+```{r scale-inferno}
+#| fig-height: 6
+#| fig-width: 8
+
+cat("**Compact (Scale: 0.85) - Inferno**\n\n")
+render_plot(4)
+```
+
+```{r scale-inferno-expanded}
+#| fig-height: 6
+#| fig-width: 8
+
+cat("\n**Expanded (Scale: 2.25) - Inferno**\n\n")
+render_plot(14)
+```
+
+## Cividis Palette
+
+```{r scale-cividis}
+#| fig-height: 6
+#| fig-width: 8
+
+cat("**Compact (Scale: 0.85) - Cividis**\n\n")
+render_plot(5)
+```
+
+```{r scale-cividis-expanded}
+#| fig-height: 6
+#| fig-width: 8
+
+cat("\n**Expanded (Scale: 2.25) - Cividis**\n\n")
+render_plot(15)
+```
+
+:::
+
+---
+
+# Plot Configuration Matrix
+
+```{r configuration-matrix}
+# Extract configuration details from plot results
+config_df <- data.frame(
+  ID = sapply(plot_results, function(x) x$plot_id),
+  Scale = sapply(plot_results, function(x) {
+    # Extract from plot config
+    ifelse(grepl("compact", x$plot_id, ignore.case=TRUE), "0.85", "2.25")
+  }),
+  Palette = sapply(plot_results, function(x) {
+    # Extract palette from plot_id (01-10 for compact, expanded follows same order)
+    suffix <- gsub(".*_", "", x$plot_id)
+    case_when(
+      suffix %in% c("01", "11") ~ "plasma",
+      suffix %in% c("02", "12") ~ "viridis",
+      suffix %in% c("03", "13") ~ "magma",
+      suffix %in% c("04", "14") ~ "inferno",
+      suffix %in% c("05", "15") ~ "cividis",
+      suffix %in% c("06", "16") ~ "rocket",
+      suffix %in% c("07", "17") ~ "mako",
+      suffix %in% c("08", "18") ~ "turbo",
+      suffix %in% c("09", "19") ~ "set2",
+      suffix %in% c("10", "20") ~ "dark2",
+      TRUE ~ "unknown"
+    )
+  }),
+  Quality = sapply(plot_results, function(x) sprintf("%.0f", x$quality_score %||% 0)),
+  Time = sapply(plot_results, function(x) sprintf("%.2fs", x$generation_time %||% 0)),
+  Status = sapply(plot_results, function(x) x$status)
+) %>%
+  mutate(
+    Category = ifelse(grepl("compact", ID, ignore.case = TRUE), "Compact", "Expanded"),
+    Status_Symbol = ifelse(Status == "success", "✓", "✗")
+  )
+
+kable(
+  config_df,
+  col.names = c("Plot ID", "Scale", "Palette", "Quality", "Time", "Status", "Category", "Status Symbol"),
+  caption = "Plot Variant Configuration Summary",
+  booktabs = TRUE
+) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                font_size = 10) %>%
+  column_spec(6, color = ifelse(config_df$Status == "success", "green", "red"))
+```
+
+---
+
+# Quality Metrics Analysis
+
+```{r quality-analysis}
+#| fig-height: 6
+#| fig-width: 8
+
+# Plot quality distribution
+quality_plot_df <- config_df %>%
+  mutate(Quality_Numeric = as.numeric(Quality))
+
+ggplot(quality_plot_df, aes(x = reorder(ID, Quality_Numeric), 
+                             y = Quality_Numeric, fill = Category)) +
+  geom_col() +
+  geom_hline(yintercept = 90, linetype = "dashed", color = "green") +
+  geom_hline(yintercept = 75, linetype = "dashed", color = "orange") +
+  annotate("text", x = 1, y = 92, label = "Excellent (90+)", 
+           color = "green", size = 3, hjust = 0) +
+  annotate("text", x = 1, y = 77, label = "Good (75+)", 
+           color = "orange", size = 3, hjust = 0) +
+  labs(title = "Plot Quality Scores (All Variants)",
+       subtitle = "Higher is better | Thresholds: Excellent ≥90, Good ≥75",
+       x = "Plot ID",
+       y = "Quality Score (0-100)",
+       fill = "Category") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_manual(values = c("Compact" = "steelblue", "Expanded" = "darkgreen"))
+```
+
+## Generation Time Analysis
+
+```{r time-analysis}
+#| fig-height: 5
+#| fig-width: 8
+
+time_plot_df <- config_df %>%
+  mutate(Time_Numeric = as.numeric(gsub("s", "", Time)))
+
+ggplot(time_plot_df, aes(x = Category, y = Time_Numeric, fill = Category)) +
+  geom_boxplot(alpha = 0.7) +
+  geom_jitter(width = 0.2, alpha = 0.5) +
+  labs(title = "Generation Time Distribution",
+       subtitle = "Compact vs Expanded variants",
+       x = "Variant Category",
+       y = "Generation Time (seconds)") +
+  theme_minimal() +
+  scale_fill_manual(values = c("Compact" = "steelblue", "Expanded" = "darkgreen"))
+```
+
+---
+
+# Usage Recommendations
+
+## When to Use Compact Variants
+
+✓ **High temporal density** (many years)  
+✓ **Overview visualization** for reports  
+✓ **Screen presentations** with limited space  
+✓ **Comparative analysis** across multiple plots
+
+## When to Use Expanded Variants
+
+✓ **Distribution shape emphasis**  
+✓ **Publication figures** (scientific papers)  
+✓ **Detailed examination** of year-specific patterns  
+✓ **Poster presentations** with large format
+
+## Palette Selection Guide
+
+| Palette | Best For | Characteristics |
+|---------|----------|-----------------|
+| **Plasma** | General use | High contrast, perceptually uniform |
+| **Viridis** | Colorblind-safe | Default, widely recognized |
+| **Magma** | Print media | Works well in grayscale |
+| **Inferno** | Dark backgrounds | High luminance range |
+| **Cividis** | Accessibility | Optimized for CVD |
+
+---
+
+# Export Information
+
+All plots generated and saved to: **`r result$output_dir`**
+
+```{r export-info}
+export_df <- data.frame(
+  Plot_ID = sapply(plot_results, function(x) x$plot_id),
+  Filename = sapply(plot_results, function(x) basename(x$output_path %||% "N/A")),
+  Size_MB = sapply(plot_results, function(x) sprintf("%.2f", x$file_size_mb %||% 0)),
+  Status = sapply(plot_results, function(x) x$status)
+)
+
+kable(export_df,
+      col.names = c("Plot ID", "Filename", "Size (MB)", "Status"),
+      caption = "Exported Plot Files",
+      booktabs = TRUE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                font_size = 10)
+```
+
+**Total Size:** `r sprintf("%.2f MB", sum(as.numeric(export_df$Size_MB), na.rm=TRUE))`
+
+---
+
+# Reproducibility
+
+```{r reproducibility-code}
+#| echo: true
+#| eval: false
+
+# Generate all plots with:
+source(here::here("R", "pipeline", "pipeline.R"))
+result <- run_pipeline(verbose = TRUE)
+
+# Access individual plots:
+plot_results <- result$phase_results$plot_generation$results
+
+# View specific plot file:
+plot_results[[1]]$output_path
+
+# Include in report:
+knitr::include_graphics(plot_results[[1]]$output_path)
+
+# Copy individual plot:
+file.copy(plot_results[[1]]$output_path, "custom_name.png", overwrite = TRUE)
+```
+
+---
+
+**Gallery Generated:** `r format(Sys.time(), "%Y-%m-%d %H:%M:%S")`  
+**Plots Rendered:** `r result$plots_generated`/`r result$phase_results$plot_generation$plots_total`  
+**Success Rate:** `r sprintf("%.0f%%", result$phase_results$plot_generation$success_rate)`  
+**Pipeline Quality:** `r sprintf("%.0f/100", result$quality_score)`

@@ -6,14 +6,15 @@
 # ==============================================================================
 
 cat("\n[TEST] Phase 3B: Plot Operations\n")
-cat("="*60, "\n")
+cat(strrep("=", 60), "\n")
 
-# Source required modules
-source(here::here("R", "functions", "phase3_plot_operations.R"))
-source(here::here("R", "functions", "robustness.R"))
-source(here::here("R", "functions", "logging.R"))
-source(here::here("R", "functions", "assertions.R"))
+# Source required modules (in dependency order)
 source(here::here("R", "functions", "utilities.R"))
+source(here::here("R", "functions", "assertions.R"))
+source(here::here("R", "functions", "logging.R"))
+source(here::here("R", "functions", "robustness.R"))
+source(here::here("R", "functions", "plot_function.R"))
+source(here::here("R", "functions", "phase3_plot_operations.R"))
 
 # Load packages
 library(ggplot2)
@@ -69,7 +70,7 @@ test_generate_plot_safe <- function() {
       if (result$status != "failed") {
         stopifnot(
           !is.null(result$plot),
-          class(result$plot)[1] == "ggplot",
+          inherits(result$plot, "ggplot"),
           !is.na(result$generation_time),
           result$generation_time > 0
         )
@@ -196,7 +197,7 @@ test_generate_all_plots_safe()
 test_batch_partial_failure()
 
 cat(sprintf("\n  Summary: %d/%d passed\n", passed_count, test_count))
-cat("="*60, "\n\n")
+cat(strrep("=", 60), "\n\n")
 
 # Return counts for aggregation
 invisible(list(passed = passed_count, total = test_count))

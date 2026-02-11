@@ -286,9 +286,9 @@ assert_is_character <- function(df, col_name, context = "") {
 #' @details
 #' **Validation Checks (in order):**
 #' 1. Input is a data frame
-#' 2. Contains required columns: mass, year, dispersed, origin
+#' 2. Contains required columns: mass, year, dispersed
 #' 3. Data is not empty (has at least 1 row)
-#' 4. Column types are correct (mass, year numeric; dispersed, origin character)
+#' 4. Column types are correct (mass, year numeric; dispersed character)
 #' 5. Key columns (mass, year) have no NA values
 #'
 #' **verbose=TRUE output:** Shows each check with ✓ indicator, useful for debugging
@@ -319,7 +319,7 @@ validate_ridgeline_data <- function(df, verbose = FALSE) {
   if (verbose) message("[VALIDATE] ✓ Input is data frame")
   
   # Check required columns exist
-  required_cols <- c("mass", "year", "dispersed", "origin")
+  required_cols <- c("mass", "year", "dispersed")
   assert_columns_exist(df, required_cols, context = "ridgeline data")
   if (verbose) message("[VALIDATE] ✓ All required columns present")
   
@@ -331,7 +331,6 @@ validate_ridgeline_data <- function(df, verbose = FALSE) {
   assert_is_numeric(df, "mass", context = "ridgeline validation")
   assert_is_numeric(df, "year", context = "ridgeline validation")
   assert_is_character(df, "dispersed", context = "ridgeline validation")
-  assert_is_character(df, "origin", context = "ridgeline validation")
   if (verbose) message("[VALIDATE] ✓ Column types correct")
   
   # Check for NAs in key columns

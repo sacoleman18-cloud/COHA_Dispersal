@@ -87,7 +87,7 @@
 #' @export
 compute_quality_metrics <- function(df,
                                     required_columns = c("mass", "year", 
-                                                         "dispersed", "origin"),
+                                                         "dispersed"),
                                     min_rows = 10,
                                     verbose = FALSE) {
   
@@ -111,9 +111,14 @@ compute_quality_metrics <- function(df,
   )
   
   # 1. COMPLETENESS: Percent non-NA cells
-  total_cells <- nrow(df) * ncol(df)
-  na_count <- sum(is.na(df))
-  metrics$completeness <- (total_cells - na_count) / total_cells * 100
+  # Handle empty dataframe (0 rows) explicitly
+  if (nrow(df) == 0) {
+    metrics$completeness <- 0
+  } else {
+    total_cells <- nrow(df) * ncol(df)
+    na_count <- sum(is.na(df))
+    metrics$completeness <- (total_cells - na_count) / total_cells * 100
+  }
   
   if (verbose) {
     message(sprintf("[QUALITY] Completeness: %.1f%% (%d NA values)",
@@ -133,19 +138,21 @@ compute_quality_metrics <- function(df,
   if ("dispersed" %in% names(df) && is.character(df$dispersed)) {
     schema_correct <- schema_correct + 1
   }
-  if ("origin" %in% names(df) && is.character(df$origin)) {
-    schema_correct <- schema_correct + 1
-  }
   
-  metrics$schema_match <- schema_correct / 4 * 100
+  metrics$schema_match <- schema_correct / 3 * 100
   
   if (verbose) {
-    message(sprintf("[QUALITY] Schema match: %.1f%% (%d/4 columns correct)",
+    message(sprintf("[QUALITY] Schema match: %.1f%% (%d/3 columns correct)",
                    metrics$schema_match, schema_correct))
   }
   
   # 3. ROW COUNT
   metrics$row_count_ok <- nrow(df) >= min_rows
+  
+  # Ensure row_count_ok is always logical, never NA
+  if (is.na(metrics$row_count_ok)) {
+    metrics$row_count_ok <- FALSE
+  }
   
   if (!metrics$row_count_ok) {
     msg <- sprintf("Only %d rows found, minimum %d required",
@@ -250,19 +257,43 @@ calculate_quality_score <- function(metrics,
   }
   
   # Get individual component scores
+  # Use %||% to handle NA, and explicit isnan() check for NaN
   completeness_score <- metrics$completeness %||% 0
+  if (is.nan(completeness_score)) completeness_score <- 0
+  
   schema_score <- metrics$schema_match %||% 0
+  if (is.nan(schema_score)) schema_score <- 0
   
   # Row count: 100 if met, scales down proportionally if below
-  row_count_score <- if (metrics$row_count_ok) {
+  # Ensure row_count_ok is logical (not NA)
+  row_count_ok <- metrics$row_count_ok %||% FALSE
+  if (is.na(row_count_ok)) row_count_ok <- FALSE
+  
+  row_count_score <- if (row_count_ok) {
     100
   } else {
-    (metrics$row_count / metrics$min_rows) * 100
+    # Handle missing row_count or min_rows gracefully
+    row_count <- metrics$row_count %||% 0
+    min_rows <- metrics$min_rows %||% 1
+    if (is.na(row_count) || is.na(min_rows)) {
+      0
+    } else {
+      (row_count / pmax(min_rows, 1)) * 100
+    }
   }
   
+  # Ensure row_count_score is valid (not NA or NaN)
+  if (is.na(row_count_score) || is.nan(row_count_score)) row_count_score <- 0
+  row_count_score <- pmax(0, pmin(100, row_count_score))
+  
   # Outlier score: 100 minus percent outliers
-  outlier_percent <- (metrics$outliers_detected / pmax(metrics$row_count, 1)) * 100
+  outliers_detected <- metrics$outliers_detected %||% 0
+  row_count <- metrics$row_count %||% 1
+  outlier_percent <- (outliers_detected / pmax(row_count, 1)) * 100
   outliers_score <- max(0, 100 - outlier_percent)
+  
+  # Ensure outliers_score is valid
+  if (is.na(outliers_score) || is.nan(outliers_score)) outliers_score <- 0
   
   # Weighted average
   overall_score <- (
@@ -272,10 +303,18 @@ calculate_quality_score <- function(metrics,
     outliers_score * weights$outliers
   )
   
+  # Ensure overall_score is valid before clamping
+  if (is.na(overall_score) || is.nan(overall_score)) overall_score <- 0
+  
   # Clamp to 0-100
   overall_score <- pmax(0, pmin(100, overall_score))
   
-  round(overall_score, 1)
+  result <- round(overall_score, 1)
+  
+  # One final safety check: if result is still NA, return 0
+  if (is.na(result)) result <- 0
+  
+  result
 }
 
 #' Generate Quality Report

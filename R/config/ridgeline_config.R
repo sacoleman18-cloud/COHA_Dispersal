@@ -206,56 +206,6 @@ ridgeline_plot_configs <- list(
     fill_palette = "cividis",
     color_palette = "cividis",
     palette_type = "viridis"
-  ),
-  
-  list(
-    id = "expanded_06",
-    name = "Rocket - Expanded",
-    scale_value = 2.25,
-    line_height = 1,
-    fill_palette = "rocket",
-    color_palette = "rocket",
-    palette_type = "viridis"
-  ),
-  
-  list(
-    id = "expanded_07",
-    name = "Mako - Expanded",
-    scale_value = 2.25,
-    line_height = 1,
-    fill_palette = "mako",
-    color_palette = "mako",
-    palette_type = "viridis"
-  ),
-  
-  list(
-    id = "expanded_08",
-    name = "Turbo - Expanded",
-    scale_value = 2.25,
-    line_height = 1,
-    fill_palette = "turbo",
-    color_palette = "turbo",
-    palette_type = "viridis"
-  ),
-  
-  list(
-    id = "expanded_09",
-    name = "Set2 - Expanded",
-    scale_value = 2.25,
-    line_height = 1,
-    fill_palette = "Set2",
-    color_palette = "Set2",
-    palette_type = "brewer"
-  ),
-  
-  list(
-    id = "expanded_10",
-    name = "Dark2 - Expanded",
-    scale_value = 2.25,
-    line_height = 1,
-    fill_palette = "Dark2",
-    color_palette = "Dark2",
-    palette_type = "brewer"
   )
 )
 

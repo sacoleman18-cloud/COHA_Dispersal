@@ -6,7 +6,7 @@
 # ==============================================================================
 
 cat("\n[TEST] Pipeline Integration\n")
-cat("="*60, "\n")
+cat(strrep("=", 60), "\n")
 
 # Source complete pipeline
 source(here::here("R", "pipeline", "pipeline.R"))
@@ -110,4 +110,155 @@ test_plot_phase_results <- function() {
   test_count <<- test_count + 1
   
   tryCatch(
-    {\n      result <- run_pipeline(verbose = FALSE)\n      \n      plot_result <- result$phase_results$plot_generation\n      \n      stopifnot(\n        !is.null(plot_result$status),\n        plot_result$status %in% c(\"success\", \"partial\", \"failed\"),\n        !is.null(plot_result$plots_generated),\n        is.numeric(plot_result$plots_generated),\n        !is.null(plot_result$plots_failed),\n        is.numeric(plot_result$plots_failed),\n        !is.null(plot_result$plots_total),\n        plot_result$plots_total == plot_result$plots_generated + plot_result$plots_failed,\n        !is.null(plot_result$quality_score),\n        is.numeric(plot_result$quality_score),\n        !is.null(plot_result$success_rate),\n        is.numeric(plot_result$success_rate),\n        plot_result$success_rate >= 0,\n        plot_result$success_rate <= 100\n      )\n      \n      # Check individual results\n      if (length(plot_result$results) > 0) {\n        stopifnot(\n          is.list(plot_result$results),\n          length(plot_result$results) == plot_result$plots_total\n        )\n      }\n      \n      cat(\"✓\\n\")\n      passed_count <<- passed_count + 1\n    },\n    error = function(e) {\n      cat(sprintf(\"✗ %s\\n\", e$message))\n    }\n  )\n}\n\n# =============================================================================\n# Test 4: Quality Score Aggregation\n# =============================================================================\ntest_quality_score_aggregation <- function() {\n  cat(\"\\n  Test 4: Quality score aggregation... \")\n  test_count <<- test_count + 1\n  \n  tryCatch(\n    {\n      result <- run_pipeline(verbose = FALSE)\n      \n      data_quality <- result$phase_results$data_load$quality_score\n      plot_quality <- result$phase_results$plot_generation$quality_score\n      overall <- result$quality_score\n      \n      # Overall should be weighted: data 40%, plots 60%\n      expected_overall <- (data_quality * 0.4) + (plot_quality * 0.6)\n      \n      stopifnot(\n        !is.na(overall),\n        is.numeric(overall),\n        overall >= 0,\n        overall <= 100,\n        abs(overall - expected_overall) < 1  # Allow small rounding difference\n      )\n      \n      cat(\"✓\\n\")\n      passed_count <<- passed_count + 1\n    },\n    error = function(e) {\n      cat(sprintf(\"✗ %s\\n\", e$message))\n    }\n  )\n}\n\n# =============================================================================\n# Test 5: Output Directory Valid\n# =============================================================================\ntest_output_directory_valid <- function() {\n  cat(\"\\n  Test 5: Output directory created... \")\n  test_count <<- test_count + 1\n  \n  tryCatch(\n    {\n      result <- run_pipeline(verbose = FALSE)\n      \n      # Output directory should exist\n      stopifnot(\n        !is.null(result$output_dir),\n        is.character(result$output_dir),\n        dir.exists(result$output_dir)\n      )\n      \n      # If plots were generated, should have PNG files\n      if (result$plots_generated > 0) {\n        png_files <- list.files(result$output_dir, pattern = \"\\\\.png$\")\n        stopifnot(length(png_files) >= result$plots_generated)\n      }\n      \n      cat(\"✓\\n\")\n      passed_count <<- passed_count + 1\n    },\n    error = function(e) {\n      cat(sprintf(\"✗ %s\\n\", e$message))\n    }\n  )\n}\n\n# =============================================================================\n# Test 6: Log File Generated\n# =============================================================================\ntest_log_file_generated <- function() {\n  cat(\"\\n  Test 6: Log file generated... \")\n  test_count <<- test_count + 1\n  \n  tryCatch(\n    {\n      result <- run_pipeline(verbose = FALSE)\n      \n      stopifnot(\n        !is.null(result$log_file),\n        is.character(result$log_file),\n        file.exists(result$log_file)\n      )\n      \n      # Log should have some content\n      log_content <- readLines(result$log_file, warn = FALSE)\n      stopifnot(length(log_content) > 0)\n      \n      cat(\"✓\\n\")\n      passed_count <<- passed_count + 1\n    },\n    error = function(e) {\n      cat(sprintf(\"✗ %s\\n\", e$message))\n    }\n  )\n}\n\n# =============================================================================\n# Run All Tests\n# =============================================================================\ntest_complete_pipeline()\ntest_data_phase_results()\ntest_plot_phase_results()\ntest_quality_score_aggregation()\ntest_output_directory_valid()\ntest_log_file_generated()\n\ncat(sprintf(\"\\n  Summary: %d/%d passed\\n\", passed_count, test_count))\ncat(\"=\"*60, \"\\n\\n\")\n\n# Return counts for aggregation\ninvisible(list(passed = passed_count, total = test_count))\n
+    {
+      result <- run_pipeline(verbose = FALSE)
+      
+      plot_result <- result$phase_results$plot_generation
+      
+      stopifnot(
+        !is.null(plot_result$status),
+        plot_result$status %in% c("success", "partial", "failed"),
+        !is.null(plot_result$plots_generated),
+        is.numeric(plot_result$plots_generated),
+        !is.null(plot_result$plots_failed),
+        is.numeric(plot_result$plots_failed),
+        !is.null(plot_result$plots_total),
+        plot_result$plots_total == plot_result$plots_generated + plot_result$plots_failed,
+        !is.null(plot_result$quality_score),
+        is.numeric(plot_result$quality_score),
+        !is.null(plot_result$success_rate),
+        is.numeric(plot_result$success_rate),
+        plot_result$success_rate >= 0,
+        plot_result$success_rate <= 100
+      )
+      
+      # Check individual results
+      if (length(plot_result$results) > 0) {
+        stopifnot(
+          is.list(plot_result$results),
+          length(plot_result$results) == plot_result$plots_total
+        )
+      }
+      
+      cat("✓\n")
+      passed_count <<- passed_count + 1
+    },
+    error = function(e) {
+      cat(sprintf("✗ %s\n", e$message))
+    }
+  )
+}
+
+# =============================================================================
+# Test 4: Quality Score Aggregation
+# =============================================================================
+test_quality_score_aggregation <- function() {
+  cat("\n  Test 4: Quality score aggregation... ")
+  test_count <<- test_count + 1
+  
+  tryCatch(
+    {
+      result <- run_pipeline(verbose = FALSE)
+      
+      data_quality <- result$phase_results$data_load$quality_score
+      plot_quality <- result$phase_results$plot_generation$quality_score
+      overall <- result$quality_score
+      
+      # Overall should be weighted: data 40%, plots 60%
+      expected_overall <- (data_quality * 0.4) + (plot_quality * 0.6)
+      
+      stopifnot(
+        !is.na(overall),
+        is.numeric(overall),
+        overall >= 0,
+        overall <= 100,
+        abs(overall - expected_overall) < 1  # Allow small rounding difference
+      )
+      
+      cat("✓\n")
+      passed_count <<- passed_count + 1
+    },
+    error = function(e) {
+      cat(sprintf("✗ %s\n", e$message))
+    }
+  )
+}
+
+# =============================================================================
+# Test 5: Output Directory Valid
+# =============================================================================
+test_output_directory_valid <- function() {
+  cat("\n  Test 5: Output directory created... ")
+  test_count <<- test_count + 1
+  
+  tryCatch(
+    {
+      result <- run_pipeline(verbose = FALSE)
+      
+      # Output directory should exist
+      stopifnot(
+        !is.null(result$output_dir),
+        is.character(result$output_dir),
+        dir.exists(result$output_dir)
+      )
+      
+      # If plots were generated, should have PNG files
+      if (result$plots_generated > 0) {
+        png_files <- list.files(result$output_dir, pattern = "\\.png$")
+        stopifnot(length(png_files) >= result$plots_generated)
+      }
+      
+      cat("✓\n")
+      passed_count <<- passed_count + 1
+    },
+    error = function(e) {
+      cat(sprintf("✗ %s\n", e$message))
+    }
+  )
+}
+
+# =============================================================================
+# Test 6: Log File Generated
+# =============================================================================
+test_log_file_generated <- function() {
+  cat("\n  Test 6: Log file generated... ")
+  test_count <<- test_count + 1
+  
+  tryCatch(
+    {
+      result <- run_pipeline(verbose = FALSE)
+      
+      stopifnot(
+        !is.null(result$log_file),
+        is.character(result$log_file),
+        file.exists(result$log_file)
+      )
+      
+      # Log should have some content
+      log_content <- readLines(result$log_file, warn = FALSE)
+      stopifnot(length(log_content) > 0)
+      
+      cat("✓\n")
+      passed_count <<- passed_count + 1
+    },
+    error = function(e) {
+      cat(sprintf("✗ %s\n", e$message))
+    }
+  )
+}
+
+# =============================================================================
+# Run All Tests
+# =============================================================================
+test_complete_pipeline()
+test_data_phase_results()
+test_plot_phase_results()
+test_quality_score_aggregation()
+test_output_directory_valid()
+test_log_file_generated()
+
+cat(sprintf("\n  Summary: %d/%d passed\n", passed_count, test_count))
+cat(strrep("=", 60), "\n\n")
+
+# Return counts for aggregation
+invisible(list(passed = passed_count, total = test_count))

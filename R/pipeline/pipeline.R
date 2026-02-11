@@ -109,7 +109,367 @@ run_pipeline <- function(data_path = "data/data.csv",
       validate_config_paths(config, create = TRUE, verbose = verbose)
       
       # Phase 3C: Use Phase 3A load_and_validate_data with quality assessment
-      data_path_full <- here::here(config$data$source_file)\n      \n      if (verbose) log_message(\n        sprintf(\"Loading data from: %s\", data_path_full),\n        \"INFO\", verbose = TRUE\n      )\n      \n      # Load and validate - returns structured result\n      data_result <- load_and_validate_data(\n        file_path = data_path_full,\n        required_columns = c(\"mass\", \"year\", \"dispersed\", \"origin\"),\n        min_rows = 10,\n        verbose = FALSE\n      )\n      \n      # Phase 3D: Log data quality results\n      if (verbose) {\n        log_message(\n          sprintf(\"Data quality assessment: %.0f/100\",\n                 data_result$quality_score),\n          \"INFO\", verbose = TRUE\n        )\n        \n        log_message(\n          sprintf(\"  - Completeness: %.1f%%\",\n                 data_result$quality_metrics$completeness),\n          \"DEBUG\", verbose = TRUE\n        )\n        \n        log_message(\n          sprintf(\"  - Schema match: %.1f%%\",\n                 data_result$quality_metrics$schema_match),\n          \"DEBUG\", verbose = TRUE\n        )\n        \n        log_message(\n          sprintf(\"  - Rows: %d\",\n                 data_result$rows),\n          \"DEBUG\", verbose = TRUE\n        )\n      }\n      \n      # Store data result for final aggregation\n      pipeline_result$phase_results$data_load <- data_result\n      pipeline_result$data_quality_score <- data_result$quality_score\n      \n      # Collect data load warnings and errors\n      if (length(data_result$warnings) > 0) {\n        pipeline_result$warnings <- c(\n          pipeline_result$warnings,\n          paste(\"[DATA]\", data_result$warnings)\n        )\n      }\n      \n      if (length(data_result$errors) > 0) {\n        pipeline_result$errors <- c(\n          pipeline_result$errors,\n          paste(\"[DATA]\", data_result$errors)\n        )\n      }\n      \n      # Check if we can proceed\n      if (data_result$status == \"failed\") {\n        stop(sprintf(\"Data load failed: %s\", data_result$message))\n      }\n      \n      # Extract dataframe for plotting\n      df <- data_result$data\n      \n      if (verbose) {\n        log_message(\n          sprintf(\"✓ Data loaded: %d rows, %d columns\",\n                 data_result$rows, data_result$columns),\n          \"INFO\", verbose = TRUE\n        )\n      }\n    },\n    error = function(e) {\n      pipeline_result <<- add_error(\n        pipeline_result,\n        format_error_message(\n          \"data_load\",\n          e$message,\n          \"Check data file path and format\"\n        ),\n        verbose\n      )\n    }\n  )\n  \n  # If data load failed completely, stop pipeline\n  if (pipeline_result$status == \"failed\") {\n    end_time <- Sys.time()\n    pipeline_result$status <- \"failed\"\n    pipeline_result$duration_secs <- as.numeric(difftime(end_time, start_time, units = \"secs\"))\n    pipeline_result$timestamp <- end_time\n    pipeline_result$log_file <- log_file\n    \n    if (verbose) {\n      log_message(\"PIPELINE FAILED at data load stage\", \"ERROR\", verbose = TRUE)\n      print_pipeline_complete(\"✗ PIPELINE FAILED\", \n                              c(sprintf(\"Error: %s\", pipeline_result$message)))\n    }\n    \n    return(invisible(pipeline_result))\n  }\n  \n  # ============================================================================\n  # PHASE 2: Generate Ridgeline Plots (Phase 3B integration)\n  # ============================================================================\n  \n  if (verbose) print_stage_header(\"2\", \"Generate Ridgeline Plots\")\n  if (verbose) log_message(\"Starting plot generation\", \"INFO\", verbose = TRUE)\n  \n  tryCatch(\n    {\n      # Get enabled plot types from config\n      enabled_types <- get_enabled_plot_types(config)\n      \n      if (\"ridgeline\" %in% enabled_types) {\n        # Load ridgeline configurations\n        plot_configs_active <- ridgeline_plot_configs\n        \n        # Create output directory\n        ridgeline_output_dir <- here::here(\n          config$paths$plots_base,\n          config$plot_types$ridgeline$output_subdir,\n          \"variants\"\n        )\n        dir.create(ridgeline_output_dir, recursive = TRUE, showWarnings = FALSE)\n        \n        if (verbose) {\n          log_message(\n            sprintf(\"Output directory: %s\",\n                   ridgeline_output_dir),\n            \"DEBUG\", verbose = TRUE\n          )\n        }\n        \n        # Phase 3C: Use Phase 3B generate_all_plots_safe for batch generation\n        if (verbose) {\n          log_message(\n            sprintf(\"Generating %d plot configurations\",\n                   length(plot_configs_active)),\n            \"INFO\", verbose = TRUE\n          )\n        }\n        \n        plot_result <- generate_all_plots_safe(\n          df = df,\n          plot_configs = plot_configs_active,\n          output_dir = ridgeline_output_dir,\n          verbose = FALSE,  # Individual plot verbosity handled separately\n          dpi = config$plot_types$ridgeline$defaults$dpi %||% 300\n        )\n        \n        # Phase 3D: Log plot generation results\n        if (verbose) {\n          log_message(\n            sprintf(\"Plot generation complete: %d/%d successful (%.0f%% success rate)\",\n                   plot_result$plots_generated,\n                   plot_result$plots_total,\n                   plot_result$success_rate),\n            \"INFO\", verbose = TRUE\n          )\n          \n          log_message(\n            sprintf(\"Average plot quality: %.0f/100\",\n                   plot_result$quality_score),\n            \"INFO\", verbose = TRUE\n          )\n          \n          log_message(\n            sprintf(\"Total generation time: %.1f seconds\",\n                   plot_result$duration_secs),\n            \"DEBUG\", verbose = TRUE\n          )\n        }\n        \n        # Store plot result for aggregation\n        pipeline_result$phase_results$plot_generation <- plot_result\n        pipeline_result$plots_generated <- plot_result$plots_generated\n        pipeline_result$plots_failed <- plot_result$plots_failed\n        pipeline_result$output_dir <- ridgeline_output_dir\n        \n        # Collect plot warnings and errors\n        if (length(plot_result$warnings) > 0) {\n          pipeline_result$warnings <- c(\n            pipeline_result$warnings,\n            paste(\"[PLOTS]\", plot_result$warnings)\n          )\n        }\n        \n        if (length(plot_result$errors) > 0) {\n          pipeline_result$errors <- c(\n            pipeline_result$errors,\n            paste(\"[PLOTS]\", plot_result$errors)\n          )\n        }\n        \n        # Log individual plot results\n        if (verbose && length(plot_result$results) > 0) {\n          for (i in seq_along(plot_result$results)) {\n            res <- plot_result$results[[i]]\n            status_symbol <- if (res$status == \"success\") \"✓\" else \"✗\"\n            log_message(\n              sprintf(\"%s Plot %d/%d - %s (quality: %.0f/100, time: %.2fs)\",\n                     status_symbol,\n                     i,\n                     length(plot_result$results),\n                     res$plot_id %||% sprintf(\"plot_%d\", i),\n                     res$quality_score %||% 0,\n                     res$duration_secs %||% 0),\n              \"DEBUG\", verbose = TRUE\n            )\n          }\n        }\n      } else {\n        if (verbose) {\n          log_message(\"Ridgeline plots disabled in config\", \"INFO\", verbose = TRUE)\n        }\n      }\n    },\n    error = function(e) {\n      pipeline_result <<- add_error(\n        pipeline_result,\n        format_error_message(\n          \"plot_generation\",\n          e$message,\n          \"Check plot configurations and data structure\"\n        ),\n        verbose\n      )\n    }\n  )\n  \n  # ============================================================================\n  # PHASE 3: Comprehensive Result Aggregation (Phase 3C final)\n  # ============================================================================\n  \n  if (verbose) print_stage_header(\"3\", \"Aggregate Results\")\n  \n  # Determine overall pipeline status\n  if (pipeline_result$status == \"failed\") {\n    # Already failed, keep status\n  } else if (is.null(pipeline_result$plots_generated)) {\n    pipeline_result$status <- \"failed\"\n    pipeline_result <- add_error(\n      pipeline_result,\n      \"No plots were generated\",\n      verbose\n    )\n  } else if (pipeline_result$plots_failed == 0 && \n             (is.null(pipeline_result$data_quality_score) || \n              pipeline_result$data_quality_score >= 90)) {\n    pipeline_result <- set_result_status(\n      pipeline_result,\n      \"success\",\n      sprintf(\"Pipeline complete: %d plots generated\",\n             pipeline_result$plots_generated),\n      verbose\n    )\n  } else if (pipeline_result$plots_generated > 0) {\n    pipeline_result <- set_result_status(\n      pipeline_result,\n      \"partial\",\n      sprintf(\"Pipeline partial: %d plots, %d failed\",\n             pipeline_result$plots_generated,\n             pipeline_result$plots_failed %||% 0),\n      verbose\n    )\n  } else {\n    pipeline_result <- add_error(\n      pipeline_result,\n      \"Pipeline failed: no plots generated\",\n      verbose\n    )\n  }\n  \n  # Compute overall quality score (weighted)\n  quality_components <- list(\n    data = pipeline_result$data_quality_score %||% 0,\n    plots = if (!is.null(pipeline_result$phase_results$plot_generation)) {\n      pipeline_result$phase_results$plot_generation$quality_score\n    } else {\n      0\n    }\n  )\n  \n  # Weight: data 40%, plots 60%\n  overall_quality <- (quality_components$data * 0.4) + \n                     (quality_components$plots * 0.6)\n  pipeline_result$quality_score <- overall_quality\n  \n  if (verbose) {\n    log_message(\n      sprintf(\"Overall pipeline quality score: %.0f/100\",\n             overall_quality),\n      \"INFO\", verbose = TRUE\n    )\n  }\n  \n  # ============================================================================\n  # FINALIZE: Print summary and return comprehensive result\n  # ============================================================================\n  \n  end_time <- Sys.time()\n  pipeline_result$timestamp <- end_time\n  pipeline_result$duration_secs <- as.numeric(difftime(end_time, start_time, units = \"secs\"))\n  pipeline_result$log_file <- log_file\n  pipeline_result$pipeline_name <- \"COHA Dispersal Ridgeline Analysis (Phase 3)\"\n  \n  if (verbose) {\n    summary_lines <- c(\n      sprintf(\"Overall Status: %s\", toupper(pipeline_result$status)),\n      sprintf(\"Data Quality: %.0f/100\", pipeline_result$data_quality_score %||% 0),\n      sprintf(\"Plots Generated: %d/%d\",\n             pipeline_result$plots_generated %||% 0,\n             (pipeline_result$plots_generated %||% 0) + (pipeline_result$plots_failed %||% 0)),\n      sprintf(\"Average Plot Quality: %.0f/100\",\n             if (!is.null(pipeline_result$phase_results$plot_generation)) \n               pipeline_result$phase_results$plot_generation$quality_score else 0),\n      sprintf(\"Pipeline Quality: %.0f/100\", pipeline_result$quality_score),\n      sprintf(\"Time Elapsed: %.1f seconds\", pipeline_result$duration_secs),\n      sprintf(\"Output: %s\", pipeline_result$output_dir %||% \"N/A\")\n    )\n    \n    if (pipeline_result$status == \"success\") {\n      print_pipeline_complete(\"✓ PIPELINE COMPLETE\", summary_lines)\n    } else if (pipeline_result$status == \"partial\") {\n      print_pipeline_complete(\"⚠ PIPELINE PARTIAL\", summary_lines)\n    } else {\n      print_pipeline_complete(\"✗ PIPELINE FAILED\", summary_lines)\n    }\n    \n    log_message(\n      sprintf(\"PIPELINE COMPLETE - %s in %.1f sec\",\n             pipeline_result$status, pipeline_result$duration_secs),\n      \"INFO\", verbose = TRUE\n    )\n  }\n  \n  invisible(pipeline_result)\n}
+      data_path_full <- here::here(config$data$source_file)
+      
+      if (verbose) log_message(
+        sprintf("Loading data from: %s", data_path_full),
+        "INFO", verbose = TRUE
+      )
+      
+      # Load and validate - returns structured result
+      data_result <- load_and_validate_data(
+        file_path = data_path_full,
+        required_columns = c("mass", "year", "dispersed"),
+        min_rows = 10,
+        verbose = FALSE
+      )
+      
+      # Phase 3D: Log data quality results
+      if (verbose) {
+        log_message(
+          sprintf("Data quality assessment: %.0f/100 (%s)",
+                 data_result$quality_score,
+                 toupper(data_result$status)),
+          "INFO", verbose = TRUE
+        )
+        
+        log_message(
+          sprintf("  - Completeness: %.1f%%",
+                 data_result$quality_metrics$completeness),
+          "DEBUG", verbose = TRUE
+        )
+        
+        log_message(
+          sprintf("  - Schema match: %.1f%%",
+                 data_result$quality_metrics$schema_match),
+          "DEBUG", verbose = TRUE
+        )
+        
+        log_message(
+          sprintf("  - Rows: %d",
+                 data_result$rows),
+          "DEBUG", verbose = TRUE
+        )
+
+        log_message(
+          sprintf("  - Warnings: %d", length(data_result$warnings)),
+          "DEBUG", verbose = TRUE
+        )
+      }
+      
+      # Store data result for final aggregation
+      pipeline_result$phase_results$data_load <- data_result
+      pipeline_result$data_quality_score <- data_result$quality_score
+      
+      # Collect data load warnings and errors
+      if (length(data_result$warnings) > 0) {
+        pipeline_result$warnings <- c(
+          pipeline_result$warnings,
+          paste("[DATA]", data_result$warnings)
+        )
+      }
+      
+      if (length(data_result$errors) > 0) {
+        pipeline_result$errors <- c(
+          pipeline_result$warnings,
+          paste("[DATA]", data_result$errors)
+        )
+      }
+      
+      # Check if we can proceed
+      if (data_result$status == "failed") {
+        stop(sprintf("Data load failed: %s", data_result$message))
+      }
+      
+      # Extract dataframe for plotting
+      df <- data_result$data
+      
+      if (verbose) {
+        log_message(
+          sprintf("✓ Data loaded: %d rows, %d columns",
+                 data_result$rows, data_result$columns),
+          "INFO", verbose = TRUE
+        )
+      }
+    },
+    error = function(e) {
+      pipeline_result <<- add_error(
+        pipeline_result,
+        format_error_message(
+          "data_load",
+          e$message,
+          "Check data file path and format"
+        ),
+        verbose
+      )
+    }
+  )
+  
+  # If data load failed completely, stop pipeline
+  if (pipeline_result$status == "failed") {
+    end_time <- Sys.time()
+    pipeline_result$status <- "failed"
+    pipeline_result$duration_secs <- as.numeric(difftime(end_time, start_time, units = "secs"))
+    pipeline_result$timestamp <- end_time
+    pipeline_result$log_file <- log_file
+    
+    if (verbose) {
+      log_message("PIPELINE FAILED at data load stage", "ERROR", verbose = TRUE)
+      print_pipeline_complete("✗ PIPELINE FAILED", 
+                              c(sprintf("Error: %s", pipeline_result$message)))
+    }
+    
+    return(invisible(pipeline_result))
+  }
+  
+  # ============================================================================
+  # PHASE 2: Generate Ridgeline Plots (Phase 3B integration)
+  # ============================================================================
+  
+  if (verbose) print_stage_header("2", "Generate Ridgeline Plots")
+  if (verbose) log_message("Starting plot generation", "INFO", verbose = TRUE)
+  
+  tryCatch(
+    {
+      # Get enabled plot types from config
+      enabled_types <- get_enabled_plot_types(config)
+      
+      if ("ridgeline" %in% enabled_types) {
+        # Load ridgeline configurations
+        plot_configs_active <- ridgeline_plot_configs
+        
+        # Create output directory
+        ridgeline_output_dir <- here::here(
+          config$paths$plots_base,
+          config$plot_types$ridgeline$output_subdir,
+          "variants"
+        )
+        dir.create(ridgeline_output_dir, recursive = TRUE, showWarnings = FALSE)
+        
+        if (verbose) {
+          log_message(
+            sprintf("Output directory: %s",
+                   ridgeline_output_dir),
+            "DEBUG", verbose = TRUE
+          )
+        }
+        
+        # Phase 3C: Use Phase 3B generate_all_plots_safe for batch generation
+        if (verbose) {
+          log_message(
+            sprintf("Generating %d plot configurations",
+                   length(plot_configs_active)),
+            "INFO", verbose = TRUE
+          )
+        }
+        
+        plot_result <- generate_all_plots_safe(
+          df = df,
+          plot_configs = plot_configs_active,
+          output_dir = ridgeline_output_dir,
+          verbose = FALSE,  # Individual plot verbosity handled separately
+          dpi = config$plot_types$ridgeline$defaults$dpi %||% 300
+        )
+        
+        # Phase 3D: Log plot generation results
+        if (verbose) {
+          log_message(
+            sprintf(
+              "Plot generation complete: %d/%d successful, %d failed (%.0f%% success rate)",
+              plot_result$plots_generated,
+              plot_result$plots_total,
+              plot_result$plots_failed,
+              plot_result$success_rate
+            ),
+            "INFO", verbose = TRUE
+          )
+          
+          log_message(
+            sprintf("Average plot quality: %.0f/100",
+                   plot_result$quality_score),
+            "INFO", verbose = TRUE
+          )
+          
+          log_message(
+            sprintf("Total generation time: %.1f seconds",
+                   plot_result$duration_secs),
+            "DEBUG", verbose = TRUE
+          )
+        }
+        
+        # Store plot result for aggregation
+        pipeline_result$phase_results$plot_generation <- plot_result
+        pipeline_result$plots_generated <- plot_result$plots_generated
+        pipeline_result$plots_failed <- plot_result$plots_failed
+        pipeline_result$output_dir <- ridgeline_output_dir
+        
+        # Collect plot warnings and errors
+        if (length(plot_result$warnings) > 0) {
+          pipeline_result$warnings <- c(
+            pipeline_result$warnings,
+            paste("[PLOTS]", plot_result$warnings)
+          )
+        }
+        
+        if (length(plot_result$errors) > 0) {
+          pipeline_result$errors <- c(
+            pipeline_result$errors,
+            paste("[PLOTS]", plot_result$errors)
+          )
+        }
+        
+        # Log individual plot results
+        if (verbose && length(plot_result$results) > 0) {
+          for (i in seq_along(plot_result$results)) {
+            res <- plot_result$results[[i]]
+            status_symbol <- if (res$status == "success") "✓" else "✗"
+            log_message(
+              sprintf("%s Plot %d/%d - %s (quality: %.0f/100, time: %.2fs)",
+                     status_symbol,
+                     i,
+                     length(plot_result$results),
+                     res$plot_id %||% sprintf("plot_%d", i),
+                     res$quality_score %||% 0,
+                     res$duration_secs %||% 0),
+              "DEBUG", verbose = TRUE
+            )
+          }
+        }
+      } else {
+        if (verbose) {
+          log_message("Ridgeline plots disabled in config", "INFO", verbose = TRUE)
+        }
+      }
+    },
+    error = function(e) {
+      pipeline_result <<- add_error(
+        pipeline_result,
+        format_error_message(
+          "plot_generation",
+          e$message,
+          "Check plot configurations and data structure"
+        ),
+        verbose
+      )
+    }
+  )
+  
+  # ============================================================================
+  # PHASE 3: Comprehensive Result Aggregation (Phase 3C final)
+  # ============================================================================
+  
+  if (verbose) print_stage_header("3", "Aggregate Results")
+  
+  # Determine overall pipeline status
+  if (pipeline_result$status == "failed") {
+    # Already failed, keep status
+  } else if (is.null(pipeline_result$plots_generated)) {
+    pipeline_result$status <- "failed"
+    pipeline_result <- add_error(
+      pipeline_result,
+      "No plots were generated",
+      verbose
+    )
+  } else if (pipeline_result$plots_failed == 0 && 
+             (is.null(pipeline_result$data_quality_score) || 
+              pipeline_result$data_quality_score >= 90)) {
+    pipeline_result <- set_result_status(
+      pipeline_result,
+      "success",
+      sprintf("Pipeline complete: %d plots generated",
+             pipeline_result$plots_generated),
+      verbose
+    )
+  } else if (pipeline_result$plots_generated > 0) {
+    pipeline_result <- set_result_status(
+      pipeline_result,
+      "partial",
+      sprintf("Pipeline partial: %d plots, %d failed",
+             pipeline_result$plots_generated,
+             pipeline_result$plots_failed %||% 0),
+      verbose
+    )
+  } else {
+    pipeline_result <- add_error(
+      pipeline_result,
+      "Pipeline failed: no plots generated",
+      verbose
+    )
+  }
+  
+  # Compute overall quality score (weighted)
+  quality_components <- list(
+    data = pipeline_result$data_quality_score %||% 0,
+    plots = if (!is.null(pipeline_result$phase_results$plot_generation)) {
+      pipeline_result$phase_results$plot_generation$quality_score
+    } else {
+      0
+    }
+  )
+  
+  # Weight: data 40%, plots 60%
+  overall_quality <- (quality_components$data * 0.4) + 
+                     (quality_components$plots * 0.6)
+  pipeline_result$quality_score <- overall_quality
+  
+  if (verbose) {
+    log_message(
+      sprintf("Overall pipeline quality score: %.0f/100",
+             overall_quality),
+      "INFO", verbose = TRUE
+    )
+  }
+  
+  # ============================================================================
+  # FINALIZE: Print summary and return comprehensive result
+  # ============================================================================
+  
+  end_time <- Sys.time()
+  pipeline_result$timestamp <- end_time
+  pipeline_result$duration_secs <- as.numeric(difftime(end_time, start_time, units = "secs"))
+  pipeline_result$log_file <- log_file
+  pipeline_result$pipeline_name <- "COHA Dispersal Ridgeline Analysis (Phase 3)"
+  
+  if (verbose) {
+    plots_generated <- pipeline_result$plots_generated %||% 0
+    plots_failed <- pipeline_result$plots_failed %||% 0
+    plots_total <- plots_generated + plots_failed
+    success_rate <- if (plots_total > 0) (plots_generated / plots_total) * 100 else 0
+
+    summary_lines <- c(
+      sprintf("Overall Status: %s", toupper(pipeline_result$status)),
+      sprintf("Data Quality: %.0f/100", pipeline_result$data_quality_score %||% 0),
+      sprintf("Plots: %d/%d generated, %d failed (%.0f%% success)",
+             plots_generated,
+             plots_total,
+             plots_failed,
+             success_rate),
+      sprintf("Average Plot Quality: %.0f/100",
+             if (!is.null(pipeline_result$phase_results$plot_generation)) 
+               pipeline_result$phase_results$plot_generation$quality_score else 0),
+      sprintf("Pipeline Quality: %.0f/100", pipeline_result$quality_score),
+      sprintf("Time Elapsed: %.1f seconds", pipeline_result$duration_secs),
+      sprintf("Output: %s", pipeline_result$output_dir %||% "N/A"),
+      sprintf("Log File: %s", pipeline_result$log_file %||% "N/A")
+    )
+    
+    if (pipeline_result$status == "success") {
+      print_pipeline_complete("✓ PIPELINE COMPLETE", summary_lines)
+    } else if (pipeline_result$status == "partial") {
+      print_pipeline_complete("⚠ PIPELINE PARTIAL", summary_lines)
+    } else {
+      print_pipeline_complete("✗ PIPELINE FAILED", summary_lines)
+    }
+    
+    log_message(
+      sprintf("PIPELINE COMPLETE - %s in %.1f sec",
+             pipeline_result$status, pipeline_result$duration_secs),
+      "INFO", verbose = TRUE
+    )
+  }
+  
+  invisible(pipeline_result)
+}
 
 #' Generate Single Plot by Configuration ID
 #'

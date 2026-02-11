@@ -6,7 +6,7 @@
 # ==============================================================================
 
 cat("\n[TEST] Phase 3A: Data Quality & Operations\n")
-cat("="*60, "\n")
+cat(strrep("=", 60), "\n")
 
 # Source required modules
 source(here::here("R", "functions", "data_quality.R"))
@@ -32,18 +32,17 @@ test_compute_quality_metrics <- function() {
       df <- data.frame(
         mass = c(100, 150, 200, NA, 175),
         year = c(2020, 2021, 2022, 2023, NA),
-        dispersed = c("yes", "no", "yes", "yes", "no"),
-        origin = c("A", "B", "A", "A", "B")
+        dispersed = c("yes", "no", "yes", "yes", "no")
       )
       
       metrics <- compute_quality_metrics(
         df,
-        required_columns = c("mass", "year", "dispersed", "origin"),
+        required_columns = c("mass", "year", "dispersed"),
         min_rows = 3,
         verbose = FALSE
       )
       
-      # 5 rows * 4 cols = 20 cells, 2 NA = 18/20 = 90% complete
+      # 5 rows * 3 cols = 15 cells, 1 NA = 14/15 = 93.3% complete
       stopifnot(
         !is.na(metrics$completeness),
         metrics$completeness >= 85,
@@ -123,7 +122,7 @@ test_load_and_validate_data <- function() {
       
       result <- load_and_validate_data(
         file_path = fixture_path,
-        required_columns = c("mass", "year", "dispersed", "origin"),
+        required_columns = c("mass", "year", "dispersed"),
         min_rows = 10,
         verbose = FALSE
       )
@@ -171,13 +170,12 @@ test_assess_data_quality <- function() {
       df <- data.frame(
         mass = rnorm(100, mean = 300, sd = 50),
         year = sample(2000:2020, 100, replace = TRUE),
-        dispersed = sample(c("yes", "no"), 100, replace = TRUE),
-        origin = sample(letters[1:3], 100, replace = TRUE)
+        dispersed = sample(c("yes", "no"), 100, replace = TRUE)
       )
       
       result <- assess_data_quality(
         df,
-        required_columns = c("mass", "year", "dispersed", "origin"),
+        required_columns = c("mass", "year", "dispersed"),
         min_rows = 50,
         verbose = FALSE
       )
@@ -209,7 +207,7 @@ test_load_and_validate_data()
 test_assess_data_quality()
 
 cat(sprintf("\n  Summary: %d/%d passed\n", passed_count, test_count))
-cat("="*60, "\n\n")
+cat(strrep("=", 60), "\n\n")
 
 # Return counts for aggregation
 invisible(list(passed = passed_count, total = test_count))

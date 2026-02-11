@@ -3,7 +3,7 @@
 # This function generates ridgeline density plots for COHA dispersal data,
 # showing mass distributions across 6-year generational periods.
 #
-# @param data Data frame containing mass, year, and dispsersed columns
+# @param data Data frame containing mass, year, and dispersed columns
 # @param scale_value Numeric value controlling ridge overlap (default: 2.25)
 # @param line_height Numeric value for mean line height (default: 1)
 # @param fill_palette Character string for fill palette name (default: "plasma")
@@ -27,7 +27,7 @@ create_ridgeline_plot <- function(data,
   # Create 6-year periods starting from 1980
   data <- data %>%
     mutate(
-      disp_lower = tolower(dispsersed),
+      disp_lower = tolower(dispersed),
       period = case_when(
         year >= 1980 & year <= 1985 ~ "1980-1985",
         year >= 1986 & year <= 1991 ~ "1986-1991",
@@ -43,7 +43,7 @@ create_ridgeline_plot <- function(data,
   
   # Filter for Unknown dispersed birds only (ridgeline)
   data_unknown <- data %>%
-    filter(dispsersed == "Unknown", !is.na(period))
+    filter(disp_lower == "unknown", !is.na(period))
   
   # Calculate mean mass for Wisconsin dispersed birds only (mean dots)
   period_means <- data %>%
