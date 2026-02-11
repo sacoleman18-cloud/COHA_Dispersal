@@ -18,6 +18,11 @@ results/plots/**/*.pdf
 results/reports/**/*.html
 results/reports/**/*.md
 
+# But allow these 3 main reports as webpages
+!results/reports/full_analysis_report.html
+!results/reports/data_quality_report.html
+!results/reports/plot_gallery.html
+
 # Temporary files
 *.tmp
 *.temp

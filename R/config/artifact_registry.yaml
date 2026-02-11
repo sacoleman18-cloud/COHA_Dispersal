@@ -33,7 +33,7 @@ artifacts:
     file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/data/data.csv
     file_hash_sha256: cfd6e29b116375b7c9f7b40845e6f05041f74dc1dcbd67b8ecce89955fffc321
     file_size_bytes: 7079.0
-    created_utc: '2026-02-11T21:56:35Z'
+    created_utc: '2026-02-11T22:26:29Z'
     pipeline_version: '1.0'
     input_artifacts: ~
     metadata:
@@ -45,55 +45,55 @@ artifacts:
     name: compact_09
     type: ridgeline_plots
     workflow: plot_generation
-    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/compact_09_20260211_155643.png
+    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/compact_09_20260211_162636.png
     file_hash_sha256: 4de0cba17b1f66f864184d62c93d6c0675cf901380340225e2657301fb7b9633
     file_size_bytes: 232904.0
-    created_utc: '2026-02-11T21:57:00Z'
+    created_utc: '2026-02-11T22:26:52Z'
     pipeline_version: '1.0'
     input_artifacts: coha_dispersal_data
     metadata:
       scale_value: 0.85
       palette: Set2
       quality_score: 100.0
-      generation_time: 0.06
+      generation_time: 0.05
   compact_10:
     name: compact_10
     type: ridgeline_plots
     workflow: plot_generation
-    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/compact_10_20260211_155643.png
+    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/compact_10_20260211_162637.png
     file_hash_sha256: 105460264982b40c6ea6a3f0e8739cacc04bfc29396fa5da657763ee1d6ae6c3
     file_size_bytes: 223887.0
-    created_utc: '2026-02-11T21:57:00Z'
+    created_utc: '2026-02-11T22:26:52Z'
     pipeline_version: '1.0'
     input_artifacts: coha_dispersal_data
     metadata:
       scale_value: 0.85
       palette: Dark2
       quality_score: 100.0
-      generation_time: 0.05
+      generation_time: 0.04
   expanded_09:
     name: expanded_09
     type: ridgeline_plots
     workflow: plot_generation
-    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/expanded_09_20260211_155654.png
+    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/expanded_09_20260211_162647.png
     file_hash_sha256: 235162282b78c44cfb051f374367f98b0aa8136c565b24c960e6cf41a220feb2
     file_size_bytes: 323654.0
-    created_utc: '2026-02-11T21:57:00Z'
+    created_utc: '2026-02-11T22:26:52Z'
     pipeline_version: '1.0'
     input_artifacts: coha_dispersal_data
     metadata:
       scale_value: 2.25
       palette: Set2
       quality_score: 100.0
-      generation_time: 0.08
+      generation_time: 0.04
   expanded_10:
     name: expanded_10
     type: ridgeline_plots
     workflow: plot_generation
-    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/expanded_10_20260211_155655.png
+    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/expanded_10_20260211_162648.png
     file_hash_sha256: 847f821f1df31a523878368de2362ff92a449605d0e0c6dbb29d3443b9b82737
     file_size_bytes: 310527.0
-    created_utc: '2026-02-11T21:57:00Z'
+    created_utc: '2026-02-11T22:26:52Z'
     pipeline_version: '1.0'
     input_artifacts: coha_dispersal_data
     metadata:
@@ -105,70 +105,70 @@ artifacts:
     name: plot_objects_20260211
     type: plot_objects
     workflow: plot_generation
-    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/rds/plot_results_20260211_155700.rds
-    file_hash_sha256: 7b3894b5fc050a33b72dc48486f7b4a7b6e34517451df65f32ef0d337fdbf2f7
-    file_size_bytes: 1003752.0
-    created_utc: '2026-02-11T21:57:01Z'
+    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/rds/plot_results_20260211_162652.rds
+    file_hash_sha256: 180d0fa9df18f8cb8ec07da10ce51a4161bc756e27cf0f5e39accce2dde6c95b
+    file_size_bytes: 1003727.0
+    created_utc: '2026-02-11T22:26:53Z'
     pipeline_version: '1.0'
     input_artifacts: ~
     metadata:
       n_plots: 28.0
       plots_failed: 0.0
       avg_quality: 100.0
-      generation_time_sec: 23.79
+      generation_time_sec: 22.63
   compact_01:
     name: compact_01
     type: ridgeline_plots
     workflow: plot_generation
-    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/compact_01_20260211_155636.png
+    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/compact_01_20260211_162629.png
     file_hash_sha256: f43f06ff945c9e3684b557ae9dc141009c84ce2d13fbf91ac992a127249f9553
     file_size_bytes: 225188.0
-    created_utc: '2026-02-11T21:56:59Z'
+    created_utc: '2026-02-11T22:26:52Z'
     pipeline_version: '1.0'
     input_artifacts: coha_dispersal_data
     metadata:
       scale_value: 0.85
       palette: plasma
       quality_score: 100.0
-      generation_time: 0.11
+      generation_time: 0.13
   compact_02:
     name: compact_02
     type: ridgeline_plots
     workflow: plot_generation
-    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/compact_02_20260211_155637.png
+    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/compact_02_20260211_162631.png
     file_hash_sha256: d97fca043cbca85e79458a865e2502a9bc153b18a09a143f47767ce0b0f9e5fc
     file_size_bytes: 225104.0
-    created_utc: '2026-02-11T21:56:59Z'
+    created_utc: '2026-02-11T22:26:52Z'
     pipeline_version: '1.0'
     input_artifacts: coha_dispersal_data
     metadata:
       scale_value: 0.85
       palette: viridis
       quality_score: 100.0
-      generation_time: 0.05
+      generation_time: 0.04
   compact_03:
     name: compact_03
     type: ridgeline_plots
     workflow: plot_generation
-    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/compact_03_20260211_155638.png
+    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/compact_03_20260211_162632.png
     file_hash_sha256: 020d4577b0a07adf08d691edd538041e7d338f4b93d19800d46a41824beffd50
     file_size_bytes: 220745.0
-    created_utc: '2026-02-11T21:56:59Z'
+    created_utc: '2026-02-11T22:26:52Z'
     pipeline_version: '1.0'
     input_artifacts: coha_dispersal_data
     metadata:
       scale_value: 0.85
       palette: magma
       quality_score: 100.0
-      generation_time: 0.06
+      generation_time: 0.05
   compact_04:
     name: compact_04
     type: ridgeline_plots
     workflow: plot_generation
-    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/compact_04_20260211_155639.png
+    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/compact_04_20260211_162632.png
     file_hash_sha256: 342f08e2950973204d90d96592fa55729a035e669f74d7c3da92e32aaab53edc
     file_size_bytes: 218594.0
-    created_utc: '2026-02-11T21:56:59Z'
+    created_utc: '2026-02-11T22:26:52Z'
     pipeline_version: '1.0'
     input_artifacts: coha_dispersal_data
     metadata:
@@ -180,40 +180,40 @@ artifacts:
     name: compact_05
     type: ridgeline_plots
     workflow: plot_generation
-    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/compact_05_20260211_155639.png
+    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/compact_05_20260211_162633.png
     file_hash_sha256: 8bc611dad2cc46e82ed13667af7b3c93739a744e974136320916f2cefe0e3fc9
     file_size_bytes: 224749.0
-    created_utc: '2026-02-11T21:56:59Z'
+    created_utc: '2026-02-11T22:26:52Z'
     pipeline_version: '1.0'
     input_artifacts: coha_dispersal_data
     metadata:
       scale_value: 0.85
       palette: cividis
       quality_score: 100.0
-      generation_time: 0.07
+      generation_time: 0.04
   compact_06:
     name: compact_06
     type: ridgeline_plots
     workflow: plot_generation
-    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/compact_06_20260211_155640.png
+    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/compact_06_20260211_162634.png
     file_hash_sha256: af6201e2708329263acadac561e0f6618a27661bc326c9974997a2902922f0cd
     file_size_bytes: 223028.0
-    created_utc: '2026-02-11T21:57:00Z'
+    created_utc: '2026-02-11T22:26:52Z'
     pipeline_version: '1.0'
     input_artifacts: coha_dispersal_data
     metadata:
       scale_value: 0.85
       palette: rocket
       quality_score: 100.0
-      generation_time: 0.05
+      generation_time: 0.04
   compact_07:
     name: compact_07
     type: ridgeline_plots
     workflow: plot_generation
-    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/compact_07_20260211_155641.png
+    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/compact_07_20260211_162635.png
     file_hash_sha256: 206e7aaeea280ec30ddc4ea2645a9ce0138e075275ef03cec26993f20f0f01ad
     file_size_bytes: 222232.0
-    created_utc: '2026-02-11T21:57:00Z'
+    created_utc: '2026-02-11T22:26:52Z'
     pipeline_version: '1.0'
     input_artifacts: coha_dispersal_data
     metadata:
@@ -225,10 +225,10 @@ artifacts:
     name: compact_08
     type: ridgeline_plots
     workflow: plot_generation
-    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/compact_08_20260211_155642.png
+    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/compact_08_20260211_162635.png
     file_hash_sha256: 78b093f0f4e458bb7b1a123466ab679193b0bdb4e3f8da4d9d8a9f1231c904f4
     file_size_bytes: 224341.0
-    created_utc: '2026-02-11T21:57:00Z'
+    created_utc: '2026-02-11T22:26:52Z'
     pipeline_version: '1.0'
     input_artifacts: coha_dispersal_data
     metadata:
@@ -240,25 +240,25 @@ artifacts:
     name: expanded_01
     type: ridgeline_plots
     workflow: plot_generation
-    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/expanded_01_20260211_155648.png
+    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/expanded_01_20260211_162641.png
     file_hash_sha256: 511f87ac12ded41a3514e49c1dc8b13e7ea69933500b50f805c200cfdf00a856
     file_size_bytes: 311258.0
-    created_utc: '2026-02-11T21:57:00Z'
+    created_utc: '2026-02-11T22:26:52Z'
     pipeline_version: '1.0'
     input_artifacts: coha_dispersal_data
     metadata:
       scale_value: 2.25
       palette: plasma
       quality_score: 100.0
-      generation_time: 0.07
+      generation_time: 0.04
   expanded_02:
     name: expanded_02
     type: ridgeline_plots
     workflow: plot_generation
-    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/expanded_02_20260211_155649.png
+    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/expanded_02_20260211_162642.png
     file_hash_sha256: e11371b0af5ad67c455e0e8b06a771b8d5cbcd3d9b0db20831f501c9b05c4c3d
     file_size_bytes: 311441.0
-    created_utc: '2026-02-11T21:57:00Z'
+    created_utc: '2026-02-11T22:26:52Z'
     pipeline_version: '1.0'
     input_artifacts: coha_dispersal_data
     metadata:
@@ -270,40 +270,40 @@ artifacts:
     name: expanded_03
     type: ridgeline_plots
     workflow: plot_generation
-    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/expanded_03_20260211_155649.png
+    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/expanded_03_20260211_162642.png
     file_hash_sha256: 713ebd0ac8827428c1647126c7370de7314cc45d2c175c93639b7383f7e7a60b
     file_size_bytes: 306268.0
-    created_utc: '2026-02-11T21:57:00Z'
+    created_utc: '2026-02-11T22:26:52Z'
     pipeline_version: '1.0'
     input_artifacts: coha_dispersal_data
     metadata:
       scale_value: 2.25
       palette: magma
       quality_score: 100.0
-      generation_time: 0.07
+      generation_time: 0.05
   expanded_04:
     name: expanded_04
     type: ridgeline_plots
     workflow: plot_generation
-    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/expanded_04_20260211_155650.png
+    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/expanded_04_20260211_162643.png
     file_hash_sha256: bdcbfbdf1173f3c063c08f144ab60cac1f77bbbd69e657f7c977cce87e10e3b5
     file_size_bytes: 303538.0
-    created_utc: '2026-02-11T21:57:00Z'
+    created_utc: '2026-02-11T22:26:52Z'
     pipeline_version: '1.0'
     input_artifacts: coha_dispersal_data
     metadata:
       scale_value: 2.25
       palette: inferno
       quality_score: 100.0
-      generation_time: 0.07
+      generation_time: 0.04
   expanded_05:
     name: expanded_05
     type: ridgeline_plots
     workflow: plot_generation
-    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/expanded_05_20260211_155651.png
+    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/expanded_05_20260211_162644.png
     file_hash_sha256: f6f5a26726dae1b457594a61f929ed492e1100487131b21e1376df4298016ad9
     file_size_bytes: 310930.0
-    created_utc: '2026-02-11T21:57:00Z'
+    created_utc: '2026-02-11T22:26:52Z'
     pipeline_version: '1.0'
     input_artifacts: coha_dispersal_data
     metadata:
@@ -315,10 +315,10 @@ artifacts:
     name: expanded_06
     type: ridgeline_plots
     workflow: plot_generation
-    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/expanded_06_20260211_155652.png
+    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/expanded_06_20260211_162645.png
     file_hash_sha256: 6267afafe01b3f14f8dfb6083f63bd8ab53fab9b3594da9ea4d1829aa75db68c
     file_size_bytes: 307738.0
-    created_utc: '2026-02-11T21:57:00Z'
+    created_utc: '2026-02-11T22:26:52Z'
     pipeline_version: '1.0'
     input_artifacts: coha_dispersal_data
     metadata:
@@ -330,40 +330,40 @@ artifacts:
     name: expanded_07
     type: ridgeline_plots
     workflow: plot_generation
-    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/expanded_07_20260211_155653.png
+    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/expanded_07_20260211_162645.png
     file_hash_sha256: 17de28617d1725298dc5963dd66cabc6568260d25b0304d1a5959459e087d426
     file_size_bytes: 307886.0
-    created_utc: '2026-02-11T21:57:00Z'
+    created_utc: '2026-02-11T22:26:52Z'
     pipeline_version: '1.0'
     input_artifacts: coha_dispersal_data
     metadata:
       scale_value: 2.25
       palette: mako
       quality_score: 100.0
-      generation_time: 0.05
+      generation_time: 0.07
   expanded_08:
     name: expanded_08
     type: ridgeline_plots
     workflow: plot_generation
-    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/expanded_08_20260211_155654.png
+    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/expanded_08_20260211_162646.png
     file_hash_sha256: b7611660c15783c267d4eca9b27b084305eb4a8e88716cb5eba18c0608d34393
     file_size_bytes: 309168.0
-    created_utc: '2026-02-11T21:57:00Z'
+    created_utc: '2026-02-11T22:26:52Z'
     pipeline_version: '1.0'
     input_artifacts: coha_dispersal_data
     metadata:
       scale_value: 2.25
       palette: turbo
       quality_score: 100.0
-      generation_time: 0.07
+      generation_time: 0.05
   full_analysis_report:
     name: full_analysis_report
     type: report
     workflow: reporting
     file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/reports/full_analysis_report.html
-    file_hash_sha256: 04a04d13bdc1647e215c1127c59efc2592c14229f368eed10758903d69144339
-    file_size_bytes: 9238876.0
-    created_utc: '2026-02-11T21:57:17Z'
+    file_hash_sha256: 9b5dc4e153d18a5b9355e097aa5ad3da8f48a73cb836855ecb2d00817c972f2c
+    file_size_bytes: 2082869.0
+    created_utc: '2026-02-11T22:27:09Z'
     pipeline_version: '1.0'
     input_artifacts:
     - coha_dispersal_data
@@ -404,9 +404,9 @@ artifacts:
     type: report
     workflow: reporting
     file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/reports/plot_gallery.html
-    file_hash_sha256: c3f5d03d5ecfdd8e3790548d62035edd2214b9f01821fbd73f62b1b07df79359
-    file_size_bytes: 2.1550452e+07
-    created_utc: '2026-02-11T21:57:31Z'
+    file_hash_sha256: 144ddc70275ac6e3d8cdef84e6ffe8be724aadb1921c1bdfa2ea37249407f7d0
+    file_size_bytes: 2.1551806e+07
+    created_utc: '2026-02-11T22:27:24Z'
     pipeline_version: '1.0'
     input_artifacts:
     - coha_dispersal_data
@@ -447,9 +447,9 @@ artifacts:
     type: report
     workflow: reporting
     file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/reports/data_quality_report.html
-    file_hash_sha256: ac1f65e37cf36c4047ea2f79dee4c095e38ac3af949980c1c7d3d52ba58502d5
+    file_hash_sha256: b0c786ce7f8fd468920932baac4bc9a788160f8805ab200839386c8a0a824a07
     file_size_bytes: 1756761.0
-    created_utc: '2026-02-11T21:57:45Z'
+    created_utc: '2026-02-11T22:27:38Z'
     pipeline_version: '1.0'
     input_artifacts:
     - coha_dispersal_data
@@ -489,120 +489,120 @@ artifacts:
     name: compact_11
     type: ridgeline_plots
     workflow: plot_generation
-    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/compact_11_20260211_155644.png
+    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/compact_11_20260211_162638.png
     file_hash_sha256: 6f25867ea3a17c862d228d7244cd03da389a432d7f07dabfc621a8881a0c3922
     file_size_bytes: 226516.0
-    created_utc: '2026-02-11T21:57:00Z'
+    created_utc: '2026-02-11T22:26:52Z'
     pipeline_version: '1.0'
     input_artifacts: coha_dispersal_data
     metadata:
       scale_value: 0.85
       palette: hawkO_natural
       quality_score: 100.0
-      generation_time: 0.05
+      generation_time: 0.04
   compact_12:
     name: compact_12
     type: ridgeline_plots
     workflow: plot_generation
-    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/compact_12_20260211_155645.png
+    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/compact_12_20260211_162638.png
     file_hash_sha256: c7ad1f7f068be5a9f5c29ed84f5e069fb79d252eafe1d3c45433eab1dfafacc8
     file_size_bytes: 224190.0
-    created_utc: '2026-02-11T21:57:00Z'
+    created_utc: '2026-02-11T22:26:52Z'
     pipeline_version: '1.0'
     input_artifacts: coha_dispersal_data
     metadata:
       scale_value: 0.85
       palette: hawkO_vivid
       quality_score: 100.0
-      generation_time: 0.08
+      generation_time: 0.07
   expanded_11:
     name: expanded_11
     type: ridgeline_plots
     workflow: plot_generation
-    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/expanded_11_20260211_155656.png
+    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/expanded_11_20260211_162649.png
     file_hash_sha256: 4ddfaa893a0ea37f915a75dc1957e645056318406146e5e11be6a9bfa85f32f8
     file_size_bytes: 313542.0
-    created_utc: '2026-02-11T21:57:00Z'
+    created_utc: '2026-02-11T22:26:52Z'
     pipeline_version: '1.0'
     input_artifacts: coha_dispersal_data
     metadata:
       scale_value: 2.25
       palette: hawkO_natural
       quality_score: 100.0
-      generation_time: 0.07
+      generation_time: 0.04
   expanded_12:
     name: expanded_12
     type: ridgeline_plots
     workflow: plot_generation
-    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/expanded_12_20260211_155657.png
+    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/expanded_12_20260211_162649.png
     file_hash_sha256: c5eb7f6badffc3fb029da0d2b09760df9c256f443a4182bd43be4dcef48ca9e2
     file_size_bytes: 309270.0
-    created_utc: '2026-02-11T21:57:00Z'
+    created_utc: '2026-02-11T22:26:52Z'
     pipeline_version: '1.0'
     input_artifacts: coha_dispersal_data
     metadata:
       scale_value: 2.25
       palette: hawkO_vivid
       quality_score: 100.0
-      generation_time: 0.05
+      generation_time: 0.04
   compact_13:
     name: compact_13
     type: ridgeline_plots
     workflow: plot_generation
-    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/compact_13_20260211_155646.png
+    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/compact_13_20260211_162639.png
     file_hash_sha256: 6a9b7fa1f41683fcde92fc0cb8d1bd39c5b7959bf2138c0d4e0001bf0a3a53ae
     file_size_bytes: 227341.0
-    created_utc: '2026-02-11T21:57:00Z'
+    created_utc: '2026-02-11T22:26:52Z'
     pipeline_version: '1.0'
     input_artifacts: coha_dispersal_data
     metadata:
       scale_value: 0.85
       palette: hawk_natural
       quality_score: 100.0
-      generation_time: 0.06
+      generation_time: 0.05
   compact_14:
     name: compact_14
     type: ridgeline_plots
     workflow: plot_generation
-    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/compact_14_20260211_155647.png
+    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/compact_14_20260211_162640.png
     file_hash_sha256: 65ad3e57a7c52826f74625b6758732a7dd60ad6c46f624c414ab9f80a4be7395
     file_size_bytes: 225654.0
-    created_utc: '2026-02-11T21:57:00Z'
+    created_utc: '2026-02-11T22:26:52Z'
     pipeline_version: '1.0'
     input_artifacts: coha_dispersal_data
     metadata:
       scale_value: 0.85
       palette: hawk_vivid
       quality_score: 100.0
-      generation_time: 0.05
+      generation_time: 0.04
   expanded_13:
     name: expanded_13
     type: ridgeline_plots
     workflow: plot_generation
-    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/expanded_13_20260211_155658.png
+    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/expanded_13_20260211_162650.png
     file_hash_sha256: cd7f8cfe1211aaf712388c1cab90c57f6907cc483459665c4e2c623b05975d92
     file_size_bytes: 314217.0
-    created_utc: '2026-02-11T21:57:00Z'
+    created_utc: '2026-02-11T22:26:52Z'
     pipeline_version: '1.0'
     input_artifacts: coha_dispersal_data
     metadata:
       scale_value: 2.25
       palette: hawk_natural
       quality_score: 100.0
-      generation_time: 0.05
+      generation_time: 0.06
   expanded_14:
     name: expanded_14
     type: ridgeline_plots
     workflow: plot_generation
-    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/expanded_14_20260211_155659.png
+    file_path: C:/Users/Triad/OneDrive/Documents/R Projects/COHA_Dispersal/results/plots/ridgeline/variants/expanded_14_20260211_162651.png
     file_hash_sha256: 69299bb11e1175386f84053d0a20cfd0910412b8dbbecfd8e7cf6871a8f2a57c
     file_size_bytes: 311993.0
-    created_utc: '2026-02-11T21:57:00Z'
+    created_utc: '2026-02-11T22:26:52Z'
     pipeline_version: '1.0'
     input_artifacts: coha_dispersal_data
     metadata:
       scale_value: 2.25
       palette: hawk_vivid
       quality_score: 100.0
-      generation_time: 0.06
-last_modified_utc: '2026-02-11T21:57:45Z'
+      generation_time: 0.04
+last_modified_utc: '2026-02-11T22:27:38Z'
