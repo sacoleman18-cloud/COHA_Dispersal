@@ -15,8 +15,8 @@ results/
 results/plots/**/*.png
 results/plots/**/*.svg
 results/plots/**/*.pdf
-results/reports/**/*.html
-results/reports/**/*.md
+results/reports/**/*
+results/rds/**/*
 
 # But allow these 3 main reports as webpages
 !results/reports/full_analysis_report.html
