@@ -5,7 +5,7 @@ setwd(here::here())
 # Load core utilities (updated paths)
 source("R/functions/core/utilities.R")
 source("R/functions/core/console.R")
-source("core/assertions.R")
+source("R/functions/core/assertions.R")
 source("R/functions/core/logging.R")
 
 # Load domain-specific functions

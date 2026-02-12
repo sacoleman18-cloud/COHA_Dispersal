@@ -10,7 +10,7 @@ cat(strrep("=", 60), "\n")
 
 # Source required modules (in dependency order)
 source(here::here("R", "functions", "utilities.R"))
-source(here::here("core", "assertions.R"))
+source(here::here("R", "functions", "assertions.R"))
 source(here::here("R", "functions", "logging.R"))
 source(here::here("R", "functions", "robustness.R"))
 source(here::here("R", "functions", "plot_operations.R"))

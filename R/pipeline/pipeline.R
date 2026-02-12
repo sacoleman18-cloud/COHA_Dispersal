@@ -35,7 +35,7 @@ for (pkg in required_packages) {
 source(here::here("R", "functions", "core", "utilities.R"))
 source(here::here("R", "functions", "core", "console.R"))
 source(here::here("R", "functions", "core", "logging.R"))
-source(here::here("core", "assertions.R"))
+source(here::here("R", "functions", "core", "assertions.R"))
 source(here::here("R", "functions", "core", "config.R"))
 
 # Phase 0b modules: Artifact registry system
@@ -47,9 +47,6 @@ source(here::here("R", "functions", "robustness.R"))
 source(here::here("R", "functions", "data_quality.R"))
 source(here::here("R", "functions", "data_operations.R"))
 source(here::here("R", "functions", "plot_operations.R"))
-
-# Domain-specific utilities
-source(here::here("domain_modules", "coha_dispersal", "data_loader.R"))
 
 # Source plot type configurations
 # Load plot registry (master configuration for all plot types)
