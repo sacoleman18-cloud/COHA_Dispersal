@@ -57,8 +57,16 @@ plot_types:
     # Report template
     report_template: "inst/reports/ridgeline_comprehensive.qmd"
     
-    # Number of variants
-    num_variants: 20
+    # Number of variants (auto-generated from plot_registry.R)
+    # Current: 28 variants (14 compact + 14 expanded)
+    # Palettes: viridis family (8), ColorBrewer (2), Cooper's Hawk custom (4)
+    num_variants: 28
+    
+    # Palette inventory:
+    # - plasma, viridis, magma, inferno, cividis, rocket, mako, turbo (viridis)
+    # - Set2, Dark2 (ColorBrewer)
+    # - hawkO_natural, hawkO_vivid (with bright orange anchor)
+    # - hawk_natural, hawk_vivid (original cream-based)
     
     # Output directory (under plots_base)
     output_subdir: "ridgeline"
