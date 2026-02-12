@@ -11,7 +11,8 @@ format:
     code-fold: true
     code-summary: "Show code"
     theme: cosmo
-    embed-resources: true
+    embed-resources: false
+    self-contained: false
     number-sections: true
 execute:
   echo: false

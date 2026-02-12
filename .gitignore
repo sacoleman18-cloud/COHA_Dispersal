@@ -15,6 +15,10 @@ results/
 results/plots/**/*.png
 results/plots/**/*.svg
 results/plots/**/*.pdf
+
+# Allow ridgeline variant PNGs for GitHub Pages
+!results/plots/ridgeline/variants/*.png
+
 results/reports/**/*
 results/rds/**/*
 

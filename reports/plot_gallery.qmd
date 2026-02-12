@@ -9,7 +9,8 @@ format:
     toc-depth: 2
     code-fold: show
     theme: flatly
-    embed-resources: true
+    embed-resources: false
+    self-contained: false
     grid:
       body-width: 1200px
 execute:

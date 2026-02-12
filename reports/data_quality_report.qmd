@@ -9,7 +9,8 @@ format:
     toc-depth: 2
     code-fold: true
     theme: journal
-    embed-resources: true
+    embed-resources: false
+    self-contained: false
 execute:
   echo: false
   warning: false
