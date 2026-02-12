@@ -13,7 +13,7 @@ source(here::here("R", "functions", "data_quality.R"))
 source(here::here("R", "functions", "data_operations.R"))
 source(here::here("R", "functions", "robustness.R"))
 source(here::here("R", "functions", "logging.R"))
-source(here::here("R", "functions", "assertions.R"))
+source(here::here("core", "assertions.R"))
 source(here::here("R", "functions", "utilities.R"))
 
 test_count <- 0
