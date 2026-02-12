@@ -151,6 +151,32 @@ palettes:
   dark2:
     enabled: true
     name: "ColorBrewer Dark2"
+  
+  # Cooper's Hawk custom palettes (with orange anchor)
+  hawkO_natural:
+    enabled: true
+    name: "Hawk Orange Natural"
+    description: "Natural tones with bright orange anchor (#EF8C27)"
+    colors: ["#1F2A3A", "#56677F", "#8C6A54", "#C98C63", "#EAD7B8", "#EF8C27"]
+  
+  hawkO_vivid:
+    enabled: true
+    name: "Hawk Orange Vivid"
+    description: "Vivid tones with saturated orange anchor (#FF8C00)"
+    colors: ["#142033", "#4A5E78", "#7A6456", "#B9734F", "#EAD7B8", "#FF8C00"]
+  
+  # Cooper's Hawk custom palettes (original cream-based)
+  hawk_natural:
+    enabled: true
+    name: "Hawk Natural"
+    description: "Natural tones with cream anchor (#F1E6D2)"
+    colors: ["#1F2A3A", "#56677F", "#8C6A54", "#C98C63", "#F1E6D2"]
+  
+  hawk_vivid:
+    enabled: true
+    name: "Hawk Vivid"
+    description: "Vivid tones with cream anchor (#EFE3C6)"
+    colors: ["#142033", "#4A5E78", "#7A6456", "#B9734F", "#EFE3C6"]
 
 # Logging Configuration
 logging:
@@ -194,7 +220,7 @@ report:
   theme: "default"
   
   # Number of variants to include in gallery
-  gallery_variants: 20
+  gallery_variants: 28
 
 # Quality Assurance
 qa:
