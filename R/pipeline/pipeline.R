@@ -14,9 +14,10 @@
 # - ggridges (ridgeline geoms)
 # - here (path management)
 # - yaml (config parsing)
-# - R/functions/core/assertions.R
-# - R/functions/core/logging.R
-# - R/functions/core/config.R
+# - core/assertions.R
+# - core/logging.R
+# - core/config.R
+# - core/report.R
 # - R/functions/plot_function.R
 # - R/config/plot_registry.R (master plot configuration)
 #
@@ -32,19 +33,19 @@ for (pkg in required_packages) {
 }
 
 # Source core utilities (in order of dependency)
-source(here::here("R", "functions", "core", "utilities.R"))
-source(here::here("R", "functions", "core", "console.R"))
-source(here::here("R", "functions", "core", "logging.R"))
+source(here::here("core", "utilities.R"))
+source(here::here("core", "console.R"))
+source(here::here("core", "logging.R"))
 source(here::here("core", "assertions.R"))
-source(here::here("R", "functions", "core", "config.R"))
+source(here::here("core", "config.R"))
 
 # Phase 0b modules: Artifact registry system
 source(here::here("R", "functions", "core", "artifacts.R"))
-source(here::here("R", "functions", "output", "report.R"))
+source(here::here("core", "report.R"))
 
 # Phase 3 modules: robustness infrastructure (Phase 3A)
-source(here::here("R", "functions", "robustness.R"))
-source(here::here("R", "functions", "data_quality.R"))
+source(here::here("core", "robustness.R"))
+source(here::here("core", "data_quality.R"))
 source(here::here("R", "functions", "data_operations.R"))
 source(here::here("R", "functions", "plot_operations.R"))
 

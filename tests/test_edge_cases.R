@@ -10,12 +10,12 @@ cat("\n[TEST] Edge Cases\n")
 cat(paste(rep("=", 60), collapse = ""), "\n")
 
 # Source required modules (in dependency order)
-source(here::here("R", "functions", "utilities.R"))
-source(here::here("R", "functions", "console.R"))
+source(here::here("core", "utilities.R"))
+source(here::here("core", "console.R"))
 source(here::here("core", "assertions.R"))
-source(here::here("R", "functions", "logging.R"))
-source(here::here("R", "functions", "robustness.R"))
-source(here::here("R", "functions", "data_quality.R"))
+source(here::here("core", "logging.R"))
+source(here::here("core", "robustness.R"))
+source(here::here("core", "data_quality.R"))
 source(here::here("R", "functions", "data_operations.R"))
 
 test_count <- 0

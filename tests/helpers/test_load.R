@@ -3,14 +3,14 @@ library(here)
 setwd(here::here())
 
 # Load core utilities (updated paths)
-source("R/functions/core/utilities.R")
-source("R/functions/core/console.R")
+source("core/utilities.R")
+source("core/console.R")
 source("core/assertions.R")
-source("R/functions/core/logging.R")
+source("core/logging.R")
 
 # Load domain-specific functions
-source("R/functions/robustness.R")
-source("R/functions/data_quality.R")
+source("core/robustness.R")
+source("core/data_quality.R")
 source("R/functions/data_operations.R")
 
 cat("\nTesting load_and_validate_data...\n\n")

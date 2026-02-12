@@ -17,7 +17,12 @@ setwd(here::here())
 # Test 1: Verify deleted files are gone
 cat("[1/5] Checking deleted files...\n")
 deleted_files <- c(
-  "R/functions/core/release.R",
+  "R/functions/core/assertions.R",
+  "R/functions/core/config.R",
+  "R/functions/core/console.R",
+  "R/functions/core/logging.R",
+  "R/functions/core/utilities.R",
+  "R/functions/core/coha_release.R",
   "R/functions/plot_function.R",
   "R/legacy/ridgeline_plot.R"
 )

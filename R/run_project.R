@@ -214,7 +214,7 @@ result <- callr::r(
       cat("CREATING RELEASE BUNDLE\n")
       cat("================================================================================\n")
       
-      source(here::here("R", "functions", "core", "coha_release.R"))
+      source(here::here("domain_modules", "coha_dispersal", "release.R"))
       
       bundle_path <- tryCatch(
         create_release_bundle(

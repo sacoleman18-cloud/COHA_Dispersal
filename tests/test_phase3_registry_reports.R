@@ -9,7 +9,7 @@ cat("\n=== Phase 3 Registry Report Test ===\n\n")
 
 # Source required functions
 source(here::here("R", "pipeline", "pipeline.R"))
-source(here::here("R", "functions", "core", "artifacts.R"))
+source(here::here("core", "artifacts.R"))
 
 registry_path <- here::here("R", "config", "artifact_registry.yaml")
 
