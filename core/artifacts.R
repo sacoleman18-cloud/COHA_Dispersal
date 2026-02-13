@@ -3,8 +3,9 @@
 # ==============================================================================
 # PURPOSE
 # -------
-# Artifact registry & file provenance tracking for COHA dispersal analysis.
-# Adapted from KPro Reference_code for COHA project use.
+# Universal artifact registry & file provenance tracking system.
+# Provides domain-agnostic functions for managing pipeline artifacts.
+# Domain implementations should create connectors to define specific artifact types.
 #
 # DEPENDS ON
 # ----------
@@ -56,17 +57,15 @@ library(here)
 REGISTRY_PATH <- here::here("R", "config", "artifact_registry.yaml")
 PIPELINE_VERSION <- "1.0"
 
-# COHA-specific artifact types (adapted from KPro)
-ARTIFACT_TYPES <- c(
-  "raw_data",           # Raw CSV from data/ folder
-  "checkpoint",         # Phase-by-phase checkpoints
-  "processed_data",     # Standardized/cleaned data
-  "ridgeline_plots",    # 24 plot variants (PNG files)
-  "summary_stats",      # Dispersal metrics, summaries
-  "plot_objects",       # ggplot2 ridgeline objects (RDS)
-  "report",             # HTML reports
-  "release_bundle",     # Portable zip archive
-  "validation_report"   # Data quality report
+# Default artifact types - can be overridden by domain-specific implementations
+DEFAULT_ARTIFACT_TYPES <- c(
+  "raw_data",
+  "checkpoint",
+  "processed_data",
+  "intermediate",
+  "results",
+  "report",
+  "validation_report"
 )
 
 # ==============================================================================
@@ -129,13 +128,15 @@ init_artifact_registry <- function(registry_path = REGISTRY_PATH) {
 #'
 #' @param registry List. Registry object from init_artifact_registry()
 #' @param artifact_name Character. Unique name for this artifact
-#' @param artifact_type Character. One of ARTIFACT_TYPES
+#' @param artifact_type Character. Artifact type (validated against allowed_types)
 #' @param workflow Character. Workflow that produced this (e.g., "plot_generation", "data_processing")
 #' @param file_path Character. Path to artifact file
 #' @param input_artifacts Character vector. Names of input artifacts (for lineage)
 #' @param metadata List. Additional metadata to store
 #' @param data_hash Character. Optional SHA256 hash of data frame content for
 #'   deterministic reproducibility. If provided, stored as data_hash_sha256. Default: NULL
+#' @param allowed_types Character vector. Valid artifact types for this domain.
+#'   Defaults to DEFAULT_ARTIFACT_TYPES. Domain implementations should override.
 #' @param quiet Logical. Suppress messages if TRUE
 #'
 #' @return List. Updated registry object (also saved to disk)
@@ -156,14 +157,15 @@ register_artifact <- function(registry,
                               input_artifacts = NULL,
                               metadata = list(),
                               data_hash = NULL,
+                              allowed_types = DEFAULT_ARTIFACT_TYPES,
                               quiet = FALSE) {
   
   # Validate artifact type
-  if (!artifact_type %in% ARTIFACT_TYPES) {
+  if (!artifact_type %in% allowed_types) {
     stop(sprintf(
       "Invalid artifact_type '%s'. Must be one of: %s",
       artifact_type,
-      paste(ARTIFACT_TYPES, collapse = ", ")
+      paste(allowed_types, collapse = ", ")
     ))
   }
   
@@ -411,7 +413,7 @@ verify_artifact <- function(registry, artifact_name) {
 #'
 #' @param registry List. Registry object from init_artifact_registry()
 #' @param required_types Character vector. Artifact types that must exist.
-#'   Default: c("raw_data", "ridgeline_plots")
+#'   Default: c("raw_data", "results") - override in domain implementations
 #' @param check_hashes Logical. Verify SHA256 hashes match? Can be slow for
 #'   many files. Default: FALSE
 #' @param verbose Logical. Print validation details. Default: FALSE
@@ -435,7 +437,7 @@ verify_artifact <- function(registry, artifact_name) {
 #'
 #' @export
 validate_artifact_registry <- function(registry,
-                                       required_types = c("raw_data", "ridgeline_plots"),
+                                       required_types = c("raw_data", "results"),
                                        check_hashes = FALSE,
                                        verbose = FALSE) {
   
@@ -605,16 +607,16 @@ save_and_register_rds <- function(object,
 
 
 # ==============================================================================
-# RDS DISCOVERY & VALIDATION (COHA-specific)
+# RDS DISCOVERY & VALIDATION (domain-specific extension point)
 # ==============================================================================
 
 #' Discover Pipeline RDS Files
 #'
 #' @description
-#' Finds the most recent summary_data and plot_objects RDS files.
-#' Returns paths and validation status.
+#' Generic template for RDS discovery. Domain implementations should override
+#' this function to define their own file patterns and naming conventions.
 #' 
-#' COHA Adaptation: Looks for plot_results_*.rds and summary_*.rds patterns
+#' Default behavior: Looks for summary_*.rds and results_*.rds patterns
 #'
 #' @param rds_dir Character. Path to RDS directory (usually results/rds/)
 #'
@@ -639,10 +641,10 @@ discover_pipeline_rds <- function(rds_dir) {
     ))
   }
   
-  # Find summary file (flexible patterns for COHA)
+  # Find summary file (generic patterns - override in domain module)
   summary_files <- list.files(
     rds_dir,
-    pattern = "^(summary_data|summary)_.*\\.rds$",
+    pattern = "^summary.*\\.rds$",
     full.names = TRUE
   )
   
