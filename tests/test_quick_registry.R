@@ -20,7 +20,7 @@ for (pkg in required_pkgs) {
 # Test 2: Source artifacts.R directly
 cat("\n[2] Sourcing artifacts.R...\n")
 source(here::here("core", "utilities.R"))
-source(here::here("R", "functions", "core", "artifacts.R"))
+source(here::here("core", "artifacts.R"))
 cat("  [OK] artifacts.R sourced\n")
 
 # Test 3: Check function exists

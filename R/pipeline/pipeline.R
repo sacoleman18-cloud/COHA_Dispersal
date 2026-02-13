@@ -40,7 +40,7 @@ source(here::here("core", "assertions.R"))
 source(here::here("core", "config.R"))
 
 # Phase 0b modules: Artifact registry system
-source(here::here("R", "functions", "core", "artifacts.R"))
+source(here::here("core", "artifacts.R"))
 source(here::here("core", "report.R"))
 
 # Phase 3 modules: robustness infrastructure (Phase 3A)
