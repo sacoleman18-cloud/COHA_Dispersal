@@ -4,22 +4,32 @@
 # PURPOSE
 # -------
 # Main orchestrator for COHA dispersal analysis pipeline.
-# Loads config, data, and plot specifications; generates all variants.
+# Loads config, data, and uses plugin-based plot system for extensibility.
 # This is the primary public interface for running the analysis.
+#
+# ARCHITECTURE: PHASE 2.1 PLUGIN-BASED PLOTS
+# -------------------------------------------
+# Pipeline is plot-type agnostic. Plot generation is fully pluggable:
+# 1. discover_modules() finds all R/plot_modules/[type]/module.R
+# 2. load_module() dynamically loads each module
+# 3. orchestrate_plot_generation() calls module's generate_plots_batch()
+#
+# To add a new plot type:
+#  → Create R/plot_modules/[new_type]/module.R
+#  → Implement required interface (get_module_metadata, generate_plot, etc.)
+#  → Pipeline auto-discovers and executes - NO downstream code changes!
 #
 # DEPENDS ON
 # ----------
 # - tidyverse (data manipulation)
 # - ggplot2 (plotting)
-# - ggridges (ridgeline geoms)
 # - here (path management)
 # - yaml (config parsing)
 # - core/assertions.R
 # - core/logging.R
 # - core/config.R
-# - core/report.R
-# - R/functions/plot_function.R
-# - R/config/plot_registry.R (master plot configuration)
+# - core/engine.R (orchestrate_plot_generation)
+# - R/config/plot_registry.R (optional - for backward compatibility)
 #
 # ==============================================================================
 
@@ -33,24 +43,43 @@ for (pkg in required_packages) {
 }
 
 # Source core utilities (in order of dependency)
-source(here::here("core", "utilities.R"))
-source(here::here("core", "console.R"))
-source(here::here("core", "logging.R"))
-source(here::here("core", "assertions.R"))
-source(here::here("core", "config.R"))
+source(here::here("R", "core", "utilities.R"))
+source(here::here("R", "core", "console.R"))
+source(here::here("R", "core", "logging.R"))
+source(here::here("R", "core", "assertions.R"))
+source(here::here("R", "core", "config.R"))
+
+# Universal visualization utilities
+source(here::here("R", "core", "palettes.R"))  # Color palettes (universal)
 
 # Phase 0b modules: Artifact registry system
-source(here::here("core", "artifacts.R"))
-source(here::here("core", "report.R"))
+source(here::here("R", "core", "artifacts.R"))
+source(here::here("R", "core", "report.R"))
+
+# Phase 1.12 modules: Critical connectors (Result & Config interfaces)
+source(here::here("R", "core", "module_result.R"))
+source(here::here("R", "core", "module_schema.R"))
+
+# Phase 1.13 modules: Important connectors (Data & Error interfaces)
+source(here::here("R", "core", "error_interface.R"))
+source(here::here("R", "core", "data_interface.R"))
+
+# Phase 1.14 modules: Advanced connectors (Dependencies, Lifecycle, Events)
+source(here::here("R", "core", "module_dependencies.R"))
+source(here::here("R", "core", "module_lifecycle.R"))
+source(here::here("R", "core", "module_events.R"))
+
+# Core pipeline engine (orchestrator and plugin manager)
+source(here::here("R", "core", "engine.R"))
 
 # Phase 3 modules: robustness infrastructure (Phase 3A)
-source(here::here("core", "robustness.R"))
-source(here::here("core", "data_quality.R"))
+source(here::here("R", "core", "robustness.R"))
+source(here::here("R", "core", "data_quality.R"))
 source(here::here("R", "functions", "data_operations.R"))
 source(here::here("R", "functions", "plot_operations.R"))
 
 # Domain-specific utilities
-source(here::here("domain_modules", "coha_dispersal", "data_loader.R"))
+source(here::here("R", "domain_modules", "coha_dispersal", "data_loader.R"))
 
 # Source plot type configurations
 # Load plot registry (master configuration for all plot types)
@@ -90,7 +119,8 @@ source(here::here("R", "config", "plot_registry.R"))
 #' @export
 run_pipeline <- function(data_path = "data/data.csv",
                          verbose = TRUE,
-                         use_registry = TRUE) {
+                         use_registry = TRUE,
+                         include_reports = TRUE) {
   
   # Initialize tracking
   start_time <- Sys.time()
@@ -108,7 +138,7 @@ run_pipeline <- function(data_path = "data/data.csv",
       error = function(e) {
         if (verbose) log_message(
           sprintf("Registry init failed: %s", e$message),
-          "WARNING", verbose = TRUE
+          "WARN", verbose = TRUE
         )
         NULL
       }
@@ -237,7 +267,7 @@ run_pipeline <- function(data_path = "data/data.csv",
           error = function(e) {
             if (verbose) log_message(
               sprintf("Data registration failed: %s", e$message),
-              "WARNING", verbose = TRUE
+              "WARN", verbose = TRUE
             )
             registry
           }
@@ -275,180 +305,157 @@ run_pipeline <- function(data_path = "data/data.csv",
   }
   
   # ============================================================================
-  # PHASE 2: Generate Ridgeline Plots (Phase 3B integration)
+  # PHASE 2: Generate Plots via Plugin System (Phase 2.1 integration)
   # ============================================================================
+  # Phase 2.1: Plugin-based plot generation
+  # - Auto-discovers all plot modules in R/plot_modules/
+  # - Dynamically loads and executes each module
+  # - No hardcoding of plot types - truly extensible
+  # - Add new plot module → pipeline auto-discovers it
   
-  if (verbose) print_stage_header("2", "Generate Ridgeline Plots")
-  if (verbose) log_message("Starting plot generation", "INFO", verbose = TRUE)
+  if (verbose) print_stage_header("2", "Generate Plots (Plugin System)")
+  if (verbose) log_message("Starting plugin-based plot generation", "INFO", verbose = TRUE)
   
   tryCatch(
     {
-      # Get enabled plot types from config
-      enabled_types <- get_enabled_plot_types(config)
+      # Create base output directory for all plots
+      plots_output_base <- here::here(
+        config$paths$plots_base %||% "data/plots"
+      )
+      dir.create(plots_output_base, recursive = TRUE, showWarnings = FALSE)
       
-      if ("ridgeline" %in% enabled_types) {
-        # Get ridgeline plot configurations from registry
-        ridgeline_variants <- plot_registry$ridgeline$variants
-        plot_configs_active <- ridgeline_variants
-        
-        # Create output directory
-        ridgeline_output_dir <- here::here(
-          config$paths$plots_base,
-          config$plot_types$ridgeline$output_subdir,
-          "variants"
+      if (verbose) {
+        log_message(
+          sprintf("Plot output base: %s", plots_output_base),
+          "DEBUG", verbose = TRUE
         )
-        dir.create(ridgeline_output_dir, recursive = TRUE, showWarnings = FALSE)
-        
-        if (verbose) {
-          log_message(
-            sprintf("Output directory: %s",
-                   ridgeline_output_dir),
-            "DEBUG", verbose = TRUE
-          )
-        }
-        
-        # Phase 3C: Use Phase 3B generate_all_plots_safe for batch generation
-        if (verbose) {
-          log_message(
-            sprintf("Generating %d plot configurations",
-                   length(plot_configs_active)),
-            "INFO", verbose = TRUE
-          )
-        }
-        
-        plot_result <- generate_all_plots_safe(
-          df = df,
-          plot_configs = plot_configs_active,
-          output_dir = ridgeline_output_dir,
-          verbose = FALSE,  # Individual plot verbosity handled separately
-          dpi = config$plot_types$ridgeline$defaults$dpi %||% 300
+      }
+      
+      # PHASE 2.1: Use plugin-based orchestration
+      plot_result <- orchestrate_plot_generation(
+        data = df,
+        base_dir = here::here(),
+        output_base = plots_output_base,
+        verbose = verbose,
+        dpi = config$plot_types$default_dpi %||% 300,
+        continue_on_error = TRUE
+      )
+      
+      # Log orchestration results
+      if (verbose) {
+        log_message(
+          sprintf(
+            "Plot modules: %d discovered, %d loaded, %d failed",
+            plot_result$modules_found,
+            plot_result$modules_loaded,
+            plot_result$modules_failed
+          ),
+          "INFO", verbose = TRUE
         )
         
-        # Phase 3D: Log plot generation results
-        if (verbose) {
-          log_message(
-            sprintf(
-              "Plot generation complete: %d/%d successful, %d failed (%.0f%% success rate)",
-              plot_result$plots_generated,
-              plot_result$plots_total,
-              plot_result$plots_failed,
-              plot_result$success_rate
-            ),
-            "INFO", verbose = TRUE
-          )
+        log_message(
+          sprintf(
+            "Plot generation: %d successful, %d failed",
+            plot_result$plots_generated,
+            plot_result$plots_failed
+          ),
+          "INFO", verbose = TRUE
+        )
+        
+        log_message(
+          sprintf("Generation time: %.1f seconds", plot_result$duration_secs),
+          "DEBUG", verbose = TRUE
+        )
+      }
+      
+      # Store plot result for aggregation
+      pipeline_result$phase_results$plot_generation <- plot_result
+      pipeline_result$plots_generated <- plot_result$plots_generated
+      pipeline_result$plots_failed <- plot_result$plots_failed
+      pipeline_result$output_dir <- plots_output_base
+      
+      # Collect plot warnings and errors
+      if (length(plot_result$errors) > 0) {
+        pipeline_result$errors <- c(
+          pipeline_result$errors,
+          paste("[PLOTS]", plot_result$errors)
+        )
+      }
+      
+      # Register all plot artifacts across all modules
+      if (use_registry && !is.null(registry) && plot_result$plots_generated > 0) {
+        if (verbose) log_message(
+          "Registering plot artifacts from all modules", "DEBUG", verbose = TRUE
+        )
+        
+        artifacts_registered <- 0
+        
+        # Iterate through all modules and their results
+        for (module_name in names(plot_result$results)) {
+          module_results <- plot_result$results[[module_name]]
           
-          log_message(
-            sprintf("Average plot quality: %.0f/100",
-                   plot_result$quality_score),
-            "INFO", verbose = TRUE
-          )
+          if (!is.list(module_results) || length(module_results) == 0) next
           
-          log_message(
-            sprintf("Total generation time: %.1f seconds",
-                   plot_result$duration_secs),
-            "DEBUG", verbose = TRUE
-          )
-        }
-        
-        # Store plot result for aggregation
-        pipeline_result$phase_results$plot_generation <- plot_result
-        pipeline_result$plots_generated <- plot_result$plots_generated
-        pipeline_result$plots_failed <- plot_result$plots_failed
-        pipeline_result$output_dir <- ridgeline_output_dir
-        
-        # Collect plot warnings and errors
-        if (length(plot_result$warnings) > 0) {
-          pipeline_result$warnings <- c(
-            pipeline_result$warnings,
-            paste("[PLOTS]", plot_result$warnings)
-          )
-        }
-        
-        if (length(plot_result$errors) > 0) {
-          pipeline_result$errors <- c(
-            pipeline_result$errors,
-            paste("[PLOTS]", plot_result$errors)
-          )
-        }
-        
-        # Log individual plot results
-        if (verbose && length(plot_result$results) > 0) {
-          for (i in seq_along(plot_result$results)) {
-            res <- plot_result$results[[i]]
-            status_symbol <- if (res$status == "success") "✓" else "✗"
-            log_message(
-              sprintf("%s Plot %d/%d - %s (quality: %.0f/100, time: %.2fs)",
-                     status_symbol,
-                     i,
-                     length(plot_result$results),
-                     res$plot_id %||% sprintf("plot_%d", i),
-                     res$quality_score %||% 0,
-                     res$duration_secs %||% 0),
-              "DEBUG", verbose = TRUE
-            )
-          }
-        }
-        
-        # Phase 1: Register plot artifacts
-        if (use_registry && !is.null(registry) && length(plot_result$results) > 0) {
-          if (verbose) log_message(
-            "Registering plot artifacts", "DEBUG", verbose = TRUE
-          )
-          
-          for (i in seq_along(plot_result$results)) {
-            res <- plot_result$results[[i]]
-            if (res$status == "success" && !is.null(res$output_path)) {
-              registry <- tryCatch(
-                register_artifact(
-                  registry = registry,
-                  artifact_name = res$plot_id %||% sprintf("plot_%d", i),
-                  artifact_type = "ridgeline_plots",
-                  workflow = "plot_generation",
-                  file_path = res$output_path,
-                  input_artifacts = "coha_dispersal_data",
-                  metadata = list(
-                    scale_value = res$metadata$scale_value,
-                    palette = res$metadata$palette,
-                    quality_score = res$quality_score,
-                    generation_time = res$generation_time
-                  ),
-                  quiet = TRUE
-                ),
-                error = function(e) {
-                  if (verbose) log_message(
-                    sprintf("Plot registration failed for %s: %s",
-                           res$plot_id, e$message),
-                    "WARNING", verbose = TRUE
-                  )
-                  registry
-                }
-              )
+          # Each item in module_results is a plot result
+          for (i in seq_along(module_results)) {
+            res <- module_results[[i]]
+            
+            if (!is.list(res) || res$status != "success" || is.null(res$output_path)) {
+              next
             }
+            
+            # Register as generic plot artifact
+            registry <- tryCatch(
+              register_artifact(
+                registry = registry,
+                artifact_name = res$plot_id %||% sprintf("%s_plot_%d", module_name, i),
+                artifact_type = "plot",
+                workflow = "plot_generation",
+                file_path = res$output_path,
+                input_artifacts = "coha_dispersal_data",
+                metadata = list(
+                  module = module_name,
+                  plot_id = res$plot_id,
+                  quality_score = res$quality_score %||% 0,
+                  generation_time = res$duration_secs %||% 0
+                ),
+                quiet = TRUE
+              ),
+              error = function(e) {
+                if (verbose) log_message(
+                  sprintf("Plot registration failed for %s: %s",
+                         res$plot_id %||% "unknown", e$message),
+                  "WARN", verbose = TRUE
+                )
+                registry
+              }
+            )
+            
+            artifacts_registered <- artifacts_registered + 1
           }
-          
-          if (verbose) log_message(
-            sprintf("Registered %d plot artifacts", plot_result$plots_generated),
+        }
+        
+        if (verbose && artifacts_registered > 0) {
+          log_message(
+            sprintf("Registered %d plot artifacts", artifacts_registered),
             "INFO", verbose = TRUE
           )
         }
         
-        # Phase 2: RDS Caching - Save plot results for report access
-        if (use_registry && !is.null(registry) && plot_result$plots_generated > 0) {
+        # Cache all plot results to RDS
+        if (plot_result$plots_generated > 0) {
           if (verbose) log_message(
             "Caching plot results to RDS", "DEBUG", verbose = TRUE
           )
           
-          # Create RDS directory if needed
           rds_dir <- here::here("results", "rds")
           if (!dir.exists(rds_dir)) {
             dir.create(rds_dir, recursive = TRUE, showWarnings = FALSE)
           }
           
-          # Generate RDS path with timestamp
           timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
           rds_path <- file.path(rds_dir, sprintf("plot_results_%s.rds", timestamp))
           
-          # Save and register RDS
           registry <- tryCatch(
             save_and_register_rds(
               object = plot_result$results,
@@ -457,9 +464,9 @@ run_pipeline <- function(data_path = "data/data.csv",
               workflow = "plot_generation",
               registry = registry,
               metadata = list(
+                n_modules = plot_result$modules_loaded,
                 n_plots = plot_result$plots_generated,
                 plots_failed = plot_result$plots_failed,
-                avg_quality = plot_result$quality_score,
                 generation_time_sec = plot_result$duration_secs
               ),
               verbose = verbose
@@ -467,7 +474,7 @@ run_pipeline <- function(data_path = "data/data.csv",
             error = function(e) {
               if (verbose) log_message(
                 sprintf("RDS caching failed: %s", e$message),
-                "WARNING", verbose = TRUE
+                "WARN", verbose = TRUE
               )
               registry
             }
@@ -481,10 +488,6 @@ run_pipeline <- function(data_path = "data/data.csv",
             )
           }
         }
-      } else {
-        if (verbose) {
-          log_message("Ridgeline plots disabled in config", "INFO", verbose = TRUE)
-        }
       }
     },
     error = function(e) {
@@ -493,7 +496,7 @@ run_pipeline <- function(data_path = "data/data.csv",
         format_error_message(
           "plot_generation",
           e$message,
-          "Check plot configurations and data structure"
+          "Check plot module definitions and data structure"
         ),
         verbose
       )
@@ -566,6 +569,140 @@ run_pipeline <- function(data_path = "data/data.csv",
     )
   }
   
+  
+  # ============================================================================
+  # STAGE 4: Generate & Render Reports
+  # ============================================================================
+  
+  if (include_reports && verbose) print_stage_header("4", "Generate & Render Reports")
+  
+  pipeline_result$rendered_reports <- character()
+  pipeline_result$report_generation_status <- "skipped"
+  
+  if (include_reports) {
+    # Check if Quarto is available
+    quarto_bin <- Sys.which("quarto")
+    
+    if (!nzchar(quarto_bin)) {
+      if (verbose) {
+        log_message(
+          "Quarto CLI not found - skipping report generation",
+          "WARN", verbose = TRUE
+        )
+      }
+      pipeline_result$report_generation_status <- "quarto_unavailable"
+    } else {
+      report_names <- c(
+        "full_analysis_report",
+        "plot_gallery",
+        "data_quality_report"
+      )
+      
+      # Use absolute path for output directory
+      output_dir_abs <- normalizePath(file.path(pipeline_result$output_dir %||% "results/plots", "..", "reports"), winslash="/", mustWork=FALSE)
+      dir.create(output_dir_abs, recursive = TRUE, showWarnings = FALSE)
+      
+      rendered_reports <- character()
+      failed_reports <- character()
+      
+      for (report_name in report_names) {
+        # Core/mothership templates live in the top-level reports/ folder
+        qmd_file <- file.path("reports", sprintf("%s.qmd", report_name))
+        if (!file.exists(qmd_file)) {
+          qmd_file <- NULL
+        }
+        
+        if (!is.null(qmd_file)) {
+          qmd_file_abs <- normalizePath(qmd_file, winslash="/", mustWork=TRUE)
+          output_file <- file.path(output_dir_abs, sprintf("%s.html", report_name))
+          
+          if (verbose) {
+            log_message(
+              sprintf("Rendering report: %s", report_name),
+              "INFO", verbose = TRUE
+            )
+          }
+          
+          # Render using quarto CLI via system2
+          output <- system2(quarto_bin, 
+                           c("render", shQuote(qmd_file_abs), 
+                             "--output-dir", shQuote(output_dir_abs)),
+                           stdout = TRUE, stderr = TRUE)
+          
+          exit_code <- attr(output, "status")
+          if (is.null(exit_code)) exit_code <- 0
+          
+          if (exit_code == 0 && file.exists(output_file)) {
+            rendered_reports <- c(rendered_reports, output_file)
+            if (verbose) {
+              log_message(
+                sprintf("Report rendered: %s", basename(output_file)),
+                "INFO", verbose = TRUE
+              )
+            }
+            
+            # Register report artifact if registry exists
+            if (use_registry && !is.null(registry)) {
+              tryCatch({
+                registry <- register_artifact(
+                  registry = registry,
+                  artifact_name = report_name,
+                  artifact_type = "report",
+                  workflow = "reporting",
+                  file_path = output_file,
+                  input_artifacts = c("coha_dispersal_data"),
+                  metadata = list(
+                    format = "HTML",
+                    template = basename(qmd_file)
+                  ),
+                  quiet = !verbose
+                )
+              }, error = function(e) {
+                if (verbose) {
+                  log_message(
+                    sprintf("Report registration failed: %s", e$message),
+                    "WARN", verbose = TRUE
+                  )
+                }
+              })
+            }
+          } else {
+            failed_reports <- c(failed_reports, report_name)
+            if (verbose) {
+              log_message(
+                sprintf("Report rendering failed: %s", report_name),
+                "WARN", verbose = TRUE
+              )
+            }
+          }
+        } else {
+          if (verbose) {
+            log_message(
+              sprintf("Report template not found: %s", report_name),
+              "WARN", verbose = TRUE
+            )
+          }
+          failed_reports <- c(failed_reports, report_name)
+        }
+      }
+      
+      pipeline_result$rendered_reports <- rendered_reports
+      pipeline_result$failed_reports <- failed_reports
+      pipeline_result$report_generation_status <- 
+        if (length(rendered_reports) > 0) "success" else "failed"
+      
+      if (verbose) {
+        reports_generated <- length(rendered_reports)
+        reports_failed <- length(failed_reports)
+        log_message(
+          sprintf("Reports: %d rendered, %d failed",
+                 reports_generated, reports_failed),
+          "INFO", verbose = TRUE
+        )
+      }
+    }
+  }
+  
   # ============================================================================
   # FINALIZE: Print summary and return comprehensive result
   # ============================================================================
@@ -591,6 +728,7 @@ run_pipeline <- function(data_path = "data/data.csv",
     plots_failed <- pipeline_result$plots_failed %||% 0
     plots_total <- plots_generated + plots_failed
     success_rate <- if (plots_total > 0) (plots_generated / plots_total) * 100 else 0
+    reports_generated <- length(pipeline_result$rendered_reports %||% character())
 
     summary_lines <- c(
       sprintf("Overall Status: %s", toupper(pipeline_result$status)),
@@ -600,6 +738,7 @@ run_pipeline <- function(data_path = "data/data.csv",
              plots_total,
              plots_failed,
              success_rate),
+      sprintf("Reports: %d rendered", reports_generated),
       sprintf("Average Plot Quality: %.0f/100",
              if (!is.null(pipeline_result$phase_results$plot_generation)) 
                pipeline_result$phase_results$plot_generation$quality_score else 0),
@@ -626,5 +765,6 @@ run_pipeline <- function(data_path = "data/data.csv",
   
   invisible(pipeline_result)
 }
+
 
 

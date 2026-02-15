@@ -217,7 +217,14 @@ load_and_validate_data <- function(file_path,
   # 4. Compute quality metrics
   if (verbose) message("[DATA] Assessing data quality...")
 
-  metrics <- compute_quality_metrics(df, required_columns, min_rows, verbose)
+  metrics <- compute_quality_metrics(
+    df = df,
+    required_columns = required_columns,
+    min_rows = min_rows,
+    column_types = NULL,
+    outlier_ranges = NULL,
+    verbose = verbose
+  )
 
   # 5. Calculate quality score
   quality_score <- calculate_quality_score(metrics)
@@ -339,7 +346,14 @@ assess_data_quality <- function(df,
   )
 
   # Compute metrics
-  metrics <- compute_quality_metrics(df, required_columns, min_rows, verbose)
+  metrics <- compute_quality_metrics(
+    df = df,
+    required_columns = required_columns,
+    min_rows = min_rows,
+    column_types = NULL,
+    outlier_ranges = NULL,
+    verbose = verbose
+  )
   quality_score <- calculate_quality_score(metrics)
 
   # Interpretation
