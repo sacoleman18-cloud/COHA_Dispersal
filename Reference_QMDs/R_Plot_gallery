@@ -1,0 +1,252 @@
+---
+title: "COHA Ridgeline Plot Gallery"
+subtitle: "Dynamic Interactive Selection Guide"
+author: "COHA Research Team"
+date: "`r Sys.Date()`"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    code-fold: show
+    theme: flatly
+    embed-resources: false
+    self-contained: false
+    grid:
+      body-width: 1200px
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r setup}
+#| include: false
+
+library(here)
+library(tidyverse)
+library(ggplot2)
+library(ggridges)
+library(knitr)
+library(kableExtra)
+library(yaml)
+
+# Source registry and pipeline
+source(here::here("R", "config", "plot_registry.R"))
+source(here::here("R", "pipeline", "pipeline.R"))
+
+# Load artifact registry (contains paths to all generated plots)
+registry_path <- here::here("R", "config", "artifact_registry.yaml")
+if (file.exists(registry_path)) {
+  artifact_registry <- yaml::read_yaml(registry_path)
+} else {
+  # Generate plots if registry doesn't exist
+  result <- run_pipeline(verbose = FALSE, use_registry = TRUE)
+  artifact_registry <- result$registry
+}
+
+# Build fast lookup: plot_id -> file_path
+plot_file_lookup <- list()
+if (!is.null(artifact_registry$artifacts)) {
+  plot_artifacts <- Filter(
+    function(x) x$type == "ridgeline_plots",
+    artifact_registry$artifacts
+  )
+  
+  for (artifact_name in names(plot_artifacts)) {
+    artifact <- plot_artifacts[[artifact_name]]
+    plot_file_lookup[[artifact_name]] <- list(
+      file_path = artifact$file_path,
+      quality = artifact$metadata$quality_score %||% 0,
+      time = artifact$metadata$generation_time %||% 0
+    )
+  }
+}
+
+# Get plot info
+get_plot_info <- function(plot_id) {
+  if (plot_id %in% names(plot_file_lookup)) {
+    return(plot_file_lookup[[plot_id]])
+  }
+  list(quality = 0, time = 0, file_path = NA)
+}
+
+# Get all plot IDs dynamically
+all_plot_ids <- names(plot_registry$ridgeline$variants)
+n_plots <- length(all_plot_ids)
+
+# Group plots by scale for comparison section
+plots_by_group <- get_plots_grouped(group_by = "group", plot_type = "ridgeline")
+```
+
+# Overview
+
+This gallery showcases **`r n_plots` ridgeline plot variants** for visualizing Cooper's Hawk mass distributions across time periods. Each variant combines:
+- **Scale**: Compact (0.85) vs Expanded (2.25)
+- **Palette**: Viridis variants, ColorBrewer, or custom Cooper's Hawk-inspired palettes
+
+## How to Use
+
+1. **Scale Comparison** - Browse side-by-side compact vs expanded for each palette
+2. **All Variants** - View full-size individual plots with quality metrics
+3. **Select your favorite** - Note the variant number for final publication
+
+---
+
+# Scale Comparison by Palette
+
+Compare compact (left) vs expanded (right) side-by-side for each palette.
+
+```{r comparison-tabs}
+#| results: asis
+
+# Get unique fill palettes
+unique_fills <- unique(sapply(plot_registry$ridgeline$variants, function(x) x$fill))
+
+cat("::: {.panel-tabset}\n\n")
+
+for (fill in unique_fills) {
+  # Find compact and expanded for this fill
+  config_compact <- NULL
+  config_expanded <- NULL
+  
+  for (cfg in plot_registry$ridgeline$variants) {
+    if (cfg$fill == fill) {
+      if (cfg$scale == 0.85 && is.null(config_compact)) {
+        config_compact <- cfg
+      } else if (cfg$scale == 2.25 && is.null(config_expanded)) {
+        config_expanded <- cfg
+      }
+    }
+  }
+  
+  if (!is.null(config_compact) && !is.null(config_expanded)) {
+    palette_name <- config_compact$fill
+    cat(sprintf("## %s\n\n", palette_name))
+    cat("::: {layout-ncol=2}\n\n")
+    
+    # Compact image
+    info_compact <- get_plot_info(config_compact$id)
+    if (!is.null(info_compact$file_path) && file.exists(info_compact$file_path)) {
+      cat(sprintf("![](%s){fig-alt='%s - Compact' width=100%%}\n\n", 
+                  info_compact$file_path, config_compact$display_name))
+    }
+    cat(sprintf("**Compact (0.85)**  \nVariant %d | Quality: %.0f/100\n\n", 
+         which(names(plot_registry$ridgeline$variants) == config_compact$id),
+         info_compact$quality))
+    
+    # Expanded image
+    info_expanded <- get_plot_info(config_expanded$id)
+    if (!is.null(info_expanded$file_path) && file.exists(info_expanded$file_path)) {
+      cat(sprintf("![](%s){fig-alt='%s - Expanded' width=100%%}\n\n",
+                  info_expanded$file_path, config_expanded$display_name))
+    }
+    cat(sprintf("**Expanded (2.25)**  \nVariant %d | Quality: %.0f/100\n\n",
+         which(names(plot_registry$ridgeline$variants) == config_expanded$id),
+         info_expanded$quality))
+    
+    cat(":::\n\n")
+  }
+}
+
+cat(":::\n")
+```
+
+---
+
+# All Variants
+
+View each variant at full size.
+
+```{r all-variants-tabs}
+#| results: asis
+
+cat("::: {.panel-tabset}\n\n")
+
+for (i in seq_along(all_plot_ids)) {
+  plot_id <- all_plot_ids[i]
+  config <- plot_registry$ridgeline$variants[[plot_id]]
+  
+  cat(sprintf("## Variant %d: %s\n\n", i, config$display_name))
+  
+  # Render image directly
+  info <- get_plot_info(plot_id)
+  if (!is.null(info$file_path) && file.exists(info$file_path)) {
+    cat(sprintf("![](%s){fig-alt='%s' width=100%%}\n\n", 
+                info$file_path, config$display_name))
+  } else {
+    cat("*Plot not available*\n\n")
+  }
+  
+  cat(sprintf("**Scale:** %g | **Palette:** %s | **Quality:** %.0f/100 | **Time:** %.2fs\n\n",
+       config$scale, config$fill, info$quality, info$time))
+}
+
+cat(":::\n")
+```
+
+---
+
+# Configuration Matrix
+
+Summary of all plot configurations.
+
+```{r config-matrix}
+# Build matrix of configurations
+config_df <- data.frame(
+  Variant = seq_along(all_plot_ids),
+  ID = all_plot_ids,
+  Scale = sapply(plot_registry$ridgeline$variants[all_plot_ids], function(x) x$scale),
+  Palette = sapply(plot_registry$ridgeline$variants[all_plot_ids], function(x) x$fill),
+  Type = sapply(plot_registry$ridgeline$variants[all_plot_ids], function(x) x$palette_type),
+  Quality = sapply(all_plot_ids, function(id) round(get_plot_info(id)$quality, 0)),
+  Time_s = sapply(all_plot_ids, function(id) round(get_plot_info(id)$time, 2))
+)
+
+kable(config_df,
+      caption = "Plot Variant Configuration Matrix",
+      booktabs = TRUE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                font_size = 11) %>%
+  column_spec(6, background = "lightgreen") %>%
+  column_spec(1, bold = TRUE)
+```
+
+---
+
+# Statistics
+
+```{r stats}
+total_variants <- n_plots
+compact_count <- sum(sapply(plot_registry$ridgeline$variants, function(x) x$scale == 0.85))
+expanded_count <- sum(sapply(plot_registry$ridgeline$variants, function(x) x$scale == 2.25))
+
+avg_quality <- mean(sapply(all_plot_ids, function(id) get_plot_info(id)$quality), na.rm = TRUE)
+avg_time <- mean(sapply(all_plot_ids, function(id) get_plot_info(id)$time), na.rm = TRUE)
+
+cat(sprintf("- **Total Variants Generated:** %d\n", total_variants))
+cat(sprintf("- **Compact Plots (0.85):** %d\n", compact_count))
+cat(sprintf("- **Expanded Plots (2.25):** %d\n", expanded_count))
+cat(sprintf("- **Average Quality Score:** %.0f/100\n", avg_quality))
+cat(sprintf("- **Average Generation Time:** %.2f seconds\n", avg_time))
+```
+
+---
+
+# About This Gallery
+
+**Generated:** `r Sys.Date()`  
+**Data Source:** `r here::here("data", "data.csv")`  
+**Plot Type:** Ridgeline density plots  
+**Time Periods:** 8 periods (1980-2027, 6-year intervals)  
+**Grouping Variable:** Period  
+
+**To add new variants:**
+1. Edit `R/config/plot_registry.R` - add to `ridgeline$variants`
+2. Re-run pipeline: `source("R/run_project.R")`
+3. Gallery automatically updates!
+
+**To add new plot types (e.g., boxplots):**
+1. Add new section to `plot_registry$boxplot$variants`
+2. Implement plot generation in `R/functions/`
+3. Enable in pipeline configuration
+4. Create separate gallery report if needed

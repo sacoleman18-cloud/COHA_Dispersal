@@ -1,0 +1,465 @@
+---
+title: "COHA Data Quality Report"
+subtitle: "Quality Assessment and Validation"
+author: "COHA Research Team"
+date: "`r Sys.Date()`"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    code-fold: true
+    theme: journal
+    embed-resources: false
+    self-contained: false
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r setup}
+#| include: false
+
+library(here)
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+
+# Source data quality modules
+source(here::here("R", "functions", "data_operations.R"))
+source(here::here("R", "functions", "robustness.R"))
+source(here::here("R", "functions", "data_quality.R"))
+source(here::here("R", "functions", "core", "logging.R"))
+source(here::here("R", "functions", "core", "assertions.R"))
+source(here::here("R", "functions", "core", "utilities.R"))
+source(here::here("R", "functions", "core", "config.R"))
+```
+
+# Executive Summary
+
+```{r load-data}
+#| cache: true
+
+# Load and validate data
+config <- load_study_config(verbose = FALSE)
+data_path <- here::here(config$data$source_file)
+
+result <- load_and_validate_data(
+  file_path = data_path,
+  required_columns = c("mass", "year", "dispersed"),
+  min_rows = 10,
+  verbose = FALSE
+)
+
+quality_score <- result$quality_score
+if (is.na(quality_score)) {
+  quality_score <- 0
+}
+```
+
+**Overall Data Quality Score:** `r sprintf("%.0f/100", quality_score)`
+
+**Status:** `r toupper(result$status)`
+
+**Interpretation:** `r if(quality_score >= 90) "**Excellent** - High confidence for analysis" else if(quality_score >= 75) "**Good** - Acceptable quality" else if(quality_score >= 50) "**Acceptable** - Review recommended" else "**Poor** - Investigation required"`
+
+---
+
+# Quality Metrics Overview
+
+## 4-Component Assessment
+
+```{r quality-metrics}
+metrics <- result$quality_metrics
+
+# Create metrics table
+metrics_df <- data.frame(
+  Component = c("Completeness", "Schema Match", "Row Count", "Outliers"),
+  Score = c(
+    sprintf("%.1f%%", metrics$completeness),
+    sprintf("%.1f%%", metrics$schema_match),
+    ifelse(metrics$row_count_ok, 
+           sprintf("✓ Pass (%d rows)", metrics$row_count),
+           sprintf("✗ Fail (%d < %d)", metrics$row_count, metrics$min_rows)),
+    sprintf("%d detected", metrics$outliers_detected)
+  ),
+  Weight = c("30%", "30%", "20%", "20%"),
+  Status = c(
+    ifelse(metrics$completeness >= 95, "✓", "⚠"),
+    ifelse(metrics$schema_match == 100, "✓", "⚠"),
+    ifelse(metrics$row_count_ok, "✓", "✗"),
+    ifelse(metrics$outliers_detected == 0, "✓", "⚠")
+  )
+)
+
+kable(metrics_df,
+      caption = "Quality Metrics Breakdown",
+      booktabs = TRUE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  column_spec(1, bold = TRUE) %>%
+  column_spec(4, color = ifelse(metrics_df$Status == "✓", "green", 
+                                ifelse(metrics_df$Status == "⚠", "orange", "red")))
+```
+
+::: {.callout-note}
+## Scoring Formula
+
+$$Q_{data} = 0.30 \times C_{complete} + 0.30 \times C_{schema} + 0.20 \times C_{rows} + 0.20 \times C_{outliers}$$
+
+Final Quality Score: **`r sprintf("%.0f/100", quality_score)`**
+:::
+
+---
+
+# Component 1: Completeness (`r sprintf("%.1f%%", metrics$completeness)`)
+
+**Weight:** 30% of total score
+
+Measures the proportion of non-missing values across all cells in the dataset.
+
+```{r completeness-analysis}
+df <- result$data
+
+# Calculate missing values per column
+missing_df <- df %>%
+  summarise(across(everything(), ~sum(is.na(.)))) %>%
+  pivot_longer(everything(), names_to = "Column", values_to = "Missing_Count") %>%
+  mutate(
+    Total_Rows = nrow(df),
+    Percent_Missing = sprintf("%.1f%%", (Missing_Count / Total_Rows) * 100),
+    Percent_Complete = sprintf("%.1f%%", ((Total_Rows - Missing_Count) / Total_Rows) * 100)
+  )
+
+kable(missing_df,
+      col.names = c("Column", "Missing Count", "Total Rows", "% Missing", "% Complete"),
+      caption = "Completeness by Column",
+      booktabs = TRUE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+### Visual Inspection
+
+```{r completeness-viz}
+#| fig-height: 4
+#| fig-width: 8
+
+missing_plot_df <- missing_df %>%
+  mutate(Complete_Count = Total_Rows - Missing_Count)
+
+ggplot(missing_plot_df, aes(x = Column)) +
+  geom_col(aes(y = Total_Rows), fill = "lightgray", alpha = 0.5) +
+  geom_col(aes(y = Complete_Count), fill = "steelblue") +
+  geom_text(aes(y = Total_Rows + 5, label = Percent_Complete), 
+            size = 3, fontface = "bold") +
+  labs(title = "Data Completeness by Column",
+       subtitle = "Blue = Complete | Gray = Total",
+       x = "Column",
+       y = "Row Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+::: {.callout-tip}
+## Interpretation
+
+- **≥95% complete:** Excellent
+- **90-94% complete:** Good
+- **85-89% complete:** Acceptable
+- **<85% complete:** Review required
+
+This dataset: **`r sprintf("%.1f%%", metrics$completeness)` complete** → `r if(metrics$completeness >= 95) "Excellent" else if(metrics$completeness >= 90) "Good" else if(metrics$completeness >= 85) "Acceptable" else "Review Required"`
+:::
+
+---
+
+# Component 2: Schema Match (`r sprintf("%.1f%%", metrics$schema_match)`)
+
+**Weight:** 30% of total score
+
+Validates that all required columns are present with correct data types.
+
+```{r schema-validation}
+# Check schema
+required_cols <- c("mass", "year", "dispersed")
+actual_cols <- names(df)
+
+schema_df <- data.frame(
+  Required_Column = required_cols,
+  Present = sapply(required_cols, function(col) col %in% actual_cols),
+  Data_Type = sapply(required_cols, function(col) {
+    if (col %in% actual_cols) class(df[[col]])[1] else "N/A"
+  }),
+  Expected_Type = c("numeric", "numeric", "character")
+) %>%
+  mutate(
+    Status = ifelse(Present & Data_Type == Expected_Type, "✓", "✗"),
+    Present = ifelse(Present, "✓", "✗")
+  )
+
+kable(schema_df,
+      col.names = c("Required Column", "Present", "Actual Type", "Expected Type", "Status"),
+      caption = "Schema Validation",
+      booktabs = TRUE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  column_spec(5, color = ifelse(schema_df$Status == "✓", "green", "red"))
+```
+
+::: {.callout-important}
+## Schema Requirements
+
+All required columns must be present with correct types:
+- `mass`: numeric (hawk body mass in grams)
+- `year`: numeric (observation year)
+- `dispersed`: character (yes/no dispersal status)
+- `origin`: character (origin location code)
+
+Schema Match: **`r sprintf("%.1f%%", metrics$schema_match)`** → `r if(metrics$schema_match == 100) "✓ All columns valid" else "⚠ Some columns missing/incorrect type"`
+:::
+
+---
+
+# Component 3: Row Count (`r ifelse(metrics$row_count_ok, "✓ Pass", "✗ Fail")`)
+
+**Weight:** 20% of total score
+
+Ensures dataset contains sufficient observations for meaningful analysis.
+
+```{r row-count}
+row_count_df <- data.frame(
+  Metric = c("Actual Row Count", "Minimum Required", "Status"),
+  Value = c(
+    sprintf("%d", metrics$row_count),
+    sprintf("%d", metrics$min_rows),
+    ifelse(metrics$row_count_ok, "✓ Pass", "✗ Fail")
+  )
+)
+
+kable(row_count_df,
+      caption = "Row Count Assessment",
+      booktabs = TRUE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  column_spec(1, bold = TRUE)
+```
+
+::: {.callout-note}
+## Scoring Logic
+
+- If `actual ≥ minimum`: Score = 100
+- If `actual < minimum`: Score = (actual / minimum) × 100
+
+Row Count Score: **`r if(metrics$row_count_ok) "100 (Pass)" else sprintf("%.0f (Fail)", (metrics$row_count/metrics$min_rows)*100)`**
+:::
+
+---
+
+# Component 4: Outliers (`r metrics$outliers_detected` detected)
+
+**Weight:** 20% of total score
+
+Detects out-of-range values that may indicate data quality issues or measurement errors.
+
+```{r outlier-detection}
+# Define valid ranges
+valid_ranges <- data.frame(
+  Variable = c("mass", "year"),
+  Min_Valid = c(0, 1980),
+  Max_Valid = c(1000, 2027),
+  Unit = c("g", "year")
+)
+
+kable(valid_ranges,
+      col.names = c("Variable", "Min Valid", "Max Valid", "Unit"),
+      caption = "Valid Range Definitions",
+      booktabs = TRUE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+### Outlier Analysis
+
+```{r outlier-details}
+# Check for outliers
+outlier_summary <- df %>%
+  summarise(
+    `Mass < 0g` = sum(mass < 0, na.rm = TRUE),
+    `Mass > 1000g` = sum(mass > 1000, na.rm = TRUE),
+    `Year < 1980` = sum(year < 1980, na.rm = TRUE),
+    `Year > 2027` = sum(year > 2027, na.rm = TRUE),
+    `Total Outliers` = metrics$outliers_detected
+  ) %>%
+  pivot_longer(everything(), names_to = "Outlier Type", values_to = "Count")
+
+kable(outlier_summary,
+      caption = "Outlier Detection Summary",
+      booktabs = TRUE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  row_spec(which(outlier_summary$Count > 0), 
+           background = "lightyellow")
+```
+
+### Distribution Validation
+
+```{r distribution-plots}
+#| fig-height: 6
+#| fig-width: 10
+#| layout-ncol: 2
+
+# Mass distribution
+ggplot(df, aes(x = mass)) +
+  geom_histogram(bins = 30, fill = "steelblue", alpha = 0.7) +
+  geom_vline(xintercept = c(0, 1000), color = "red", linetype = "dashed") +
+  annotate("text", x = 0, y = Inf, label = "Min: 0g", 
+           vjust = 2, hjust = -0.1, color = "red", size = 3) +
+  annotate("text", x = 1000, y = Inf, label = "Max: 1000g", 
+           vjust = 2, hjust = 1.1, color = "red", size = 3) +
+  labs(title = "Mass Distribution with Valid Range",
+       subtitle = "Red lines = boundaries (0-1000g)",
+       x = "Mass (g)",
+       y = "Count") +
+  theme_minimal()
+
+# Year distribution
+ggplot(df, aes(x = year)) +
+  geom_histogram(bins = 20, fill = "darkgreen", alpha = 0.7) +
+  geom_vline(xintercept = c(1980, 2027), color = "red", linetype = "dashed") +
+  annotate("text", x = 1980, y = Inf, label = "Min: 1980", 
+           vjust = 2, hjust = -0.1, color = "red", size = 3) +
+  annotate("text", x = 2027, y = Inf, label = "Max: 2027", 
+           vjust = 2, hjust = 1.1, color = "red", size = 3) +
+  labs(title = "Year Distribution with Valid Range",
+       subtitle = "Red lines = boundaries (1980-2027)",
+       x = "Year",
+       y = "Count") +
+  theme_minimal()
+```
+
+::: {.callout-tip}
+## Outlier Score Calculation
+
+$$C_{outliers} = 100 - \left(\frac{\text{outlier count}}{\text{row count}} \times 100\right)$$
+
+Outlier Score: **`r sprintf("%.0f", 100 - (metrics$outliers_detected / metrics$row_count * 100))`/100**
+
+- 0 outliers = 100 (perfect)
+- More outliers = lower score
+:::
+
+---
+
+# Warnings and Recommendations
+
+```{r warnings}
+if (length(metrics$warnings) > 0) {
+  warning_df <- data.frame(
+    Warning = metrics$warnings
+  )
+  
+  kable(warning_df,
+        caption = "Data Quality Warnings",
+        booktabs = TRUE) %>%
+    kable_styling(bootstrap_options = c("striped", "hover"))
+} else {
+  cat("✓ No warnings - Data passed all quality checks\n")
+}
+```
+
+```{r recommendations}
+recommendations <- c()
+
+if (metrics$completeness < 95) {
+  recommendations <- c(recommendations, 
+    sprintf("⚠ Completeness below 95%% (%.1f%%). Consider reviewing missing value patterns.", metrics$completeness))
+}
+
+if (metrics$schema_match < 100) {
+  recommendations <- c(recommendations,
+    "⚠ Schema validation failed. Check column names and data types.")
+}
+
+if (!metrics$row_count_ok) {
+  recommendations <- c(recommendations,
+    sprintf("⚠ Row count below minimum (%d < %d). Consider collecting more data.", 
+            metrics$row_count, metrics$min_rows))
+}
+
+if (metrics$outliers_detected > 0) {
+  recommendations <- c(recommendations,
+    sprintf("⚠ %d outliers detected. Review values outside valid ranges.", 
+            metrics$outliers_detected))
+}
+
+if (length(recommendations) > 0) {
+  rec_df <- data.frame(Recommendation = recommendations)
+  kable(rec_df,
+        caption = "Quality Improvement Recommendations",
+        booktabs = TRUE) %>%
+    kable_styling(bootstrap_options = c("striped", "hover"))
+} else {
+  cat("✓ No recommendations - Data meets all quality standards\n")
+}
+```
+
+---
+
+# Quality Gate Decision
+
+```{r quality-gate}
+quality_gate <- case_when(
+  result$quality_score >= 90 ~ list(
+    decision = "✓ APPROVE",
+    color = "success",
+    message = "Data quality is excellent. Proceed with analysis."
+  ),
+  result$quality_score >= 75 ~ list(
+    decision = "⚠ APPROVE WITH REVIEW",
+    color = "warning",
+    message = "Data quality is good. Review warnings before proceeding."
+  ),
+  result$quality_score >= 50 ~ list(
+    decision = "⚠ CONDITIONAL APPROVAL",
+    color = "warning",
+    message = "Data quality is acceptable. Address recommendations."
+  ),
+  TRUE ~ list(
+    decision = "✗ REJECT",
+    color = "danger",
+    message = "Data quality is poor. Investigation required before analysis."
+  )
+)
+```
+
+::: {.callout-`r quality_gate$color`}
+## Quality Gate: `r quality_gate$decision`
+
+**Overall Score:** `r sprintf("%.0f/100", result$quality_score)`
+
+`r quality_gate$message`
+:::
+
+---
+
+# Reproducibility
+
+```{r reproducibility}
+#| echo: true
+
+# Quality assessment can be reproduced with:
+source(here::here("R", "functions", "data_operations.R"))
+
+result <- load_and_validate_data(
+  file_path = here::here("data", "data.csv"),
+  required_columns = c("mass", "year", "dispersed", "origin"),
+  min_rows = 10,
+  verbose = TRUE
+)
+
+# View quality report
+print(result$quality_score)
+print(result$quality_metrics)
+```
+
+---
+
+**Report Generated:** `r format(Sys.time(), "%Y-%m-%d %H:%M:%S")`  
+**Data File:** `r data_path`  
+**Quality Score:** `r sprintf("%.0f/100", result$quality_score)`  
+**Status:** `r result$status`

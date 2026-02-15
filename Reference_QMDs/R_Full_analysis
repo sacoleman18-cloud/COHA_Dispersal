@@ -1,0 +1,415 @@
+---
+title: "COHA Dispersal Analysis: Complete Report"
+subtitle: "Natal Dispersal and Mass Distribution - 20 Ridgeline Variants"
+author: "COHA Research Team"
+date: "`r Sys.Date()`"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-location: left
+    code-fold: true
+    code-summary: "Show code"
+    theme: cosmo
+    embed-resources: false
+    self-contained: false
+    number-sections: true
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r setup}
+#| include: false
+
+# Load required packages
+library(here)
+library(tidyverse)
+library(ggplot2)
+library(ggridges)
+library(knitr)
+library(kableExtra)
+
+# Source pipeline and helper functions
+source(here::here("R", "pipeline", "pipeline.R"))
+```
+
+# Executive Summary
+
+This report presents a comprehensive analysis of Cooper's Hawk (COHA) natal dispersal patterns and mass distributions using 20 ridgeline plot variants. The analysis employs a robust, quality-scored pipeline with comprehensive error handling and data validation.
+
+## Key Findings
+
+```{r run-pipeline}
+#| cache: true
+
+# Run complete pipeline with quality assessment
+result <- run_pipeline(verbose = FALSE, use_registry = TRUE)
+
+# Extract key metrics
+data_quality <- result$phase_results$data_load$quality_score
+plot_quality <- result$phase_results$plot_generation$quality_score
+overall_quality <- result$quality_score
+plots_generated <- result$plots_generated
+plots_total <- result$phase_results$plot_generation$plots_total
+
+# Phase 3: Load artifact registry for plot access
+registry_path <- here::here("R", "config", "artifact_registry.yaml")
+if (file.exists(registry_path)) {
+  registry <- yaml::read_yaml(registry_path)
+} else {
+  registry <- result$registry  # Fallback to pipeline result
+}
+```
+
+- **Data Quality Score:** `r sprintf("%.0f/100", data_quality)` 
+- **Plot Generation Success:** `r plots_generated`/`r plots_total` plots (`r sprintf("%.0f%%", (plots_generated/plots_total)*100)`)
+- **Overall Pipeline Quality:** `r sprintf("%.0f/100", overall_quality)`
+- **Analysis Status:** `r toupper(result$status)`
+
+::: {.callout-note}
+## Quality Interpretation
+
+- **90-100:** Excellent - High confidence for publication
+- **75-89:** Good - Acceptable with minor review
+- **50-74:** Acceptable - Review recommended
+- **0-49:** Poor - Investigation required
+
+This analysis scored **`r sprintf("%.0f", overall_quality)`**, indicating `r if(overall_quality >= 90) "excellent" else if(overall_quality >= 75) "good" else if(overall_quality >= 50) "acceptable" else "poor"` quality.
+:::
+
+# Data Overview
+
+```{r data-summary}
+df <- result$phase_results$data_load$data
+
+# Calculate summary statistics
+summary_stats <- tibble::tibble(
+  Metric = c(
+    "Total Observations",
+    "Years Covered",
+    "Mean Mass (g)",
+    "SD Mass (g)",
+    "Mass Range (g)"
+  ),
+  Value = c(
+    sprintf("%d", nrow(df)),
+    sprintf("%d - %d", min(df$year, na.rm=TRUE), max(df$year, na.rm=TRUE)),
+    sprintf("%.1f", mean(df$mass, na.rm=TRUE)),
+    sprintf("%.1f", sd(df$mass, na.rm=TRUE)),
+    sprintf("%.0f - %.0f", min(df$mass, na.rm=TRUE), max(df$mass, na.rm=TRUE))
+  )
+)
+
+kable(summary_stats, 
+      caption = "Dataset Summary Statistics",
+      booktabs = TRUE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+## Data Quality Metrics
+
+```{r quality-metrics}
+metrics <- result$phase_results$data_load$quality_metrics
+
+quality_df <- data.frame(
+  Component = c("Completeness", "Schema Match", "Row Count", "Outliers Detected"),
+  Value = c(
+    sprintf("%.1f%%", metrics$completeness),
+    sprintf("%.1f%%", metrics$schema_match),
+    sprintf("%s (%d rows)", 
+            ifelse(metrics$row_count_ok, "✓ Pass", "✗ Fail"),
+            metrics$row_count),
+    sprintf("%d", metrics$outliers_detected)
+  ),
+  Weight = c("30%", "30%", "20%", "20%")
+)
+
+kable(quality_df,
+      caption = "Data Quality Assessment (4-Component System)",
+      booktabs = TRUE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  column_spec(1, bold = TRUE)
+```
+
+::: {.callout-tip}
+## Quality Scoring System
+
+The data quality score is computed as a weighted average:
+
+$$
+Q_{data} = 0.30 \times C_{complete} + 0.30 \times C_{schema} + 0.20 \times C_{rows} + 0.20 \times C_{outliers}
+$$
+
+Where each component is scaled to [0, 100]. Final score: **`r sprintf("%.0f/100", data_quality)`**
+:::
+
+# Ridgeline Plot Variants
+
+The pipeline generated **`r plots_generated` plot variants** exploring different visual encodings of the COHA mass distribution data.
+
+## Compact Variants (Scale: 0.85)
+
+Compact ridgelines minimize overlap for high-density temporal data.
+
+```{r compact-plots}
+#| fig-height: 8
+#| fig-width: 10
+#| layout-ncol: 2
+
+# Phase 3: Load compact plots from artifact registry (not filesystem)
+if (!is.null(registry) && !is.null(registry$artifacts)) {
+  # Get compact plot artifacts (IDs starting with "compact_")
+  compact_artifacts <- Filter(
+    function(x) x$type == "ridgeline_plots" && grepl("^compact_", x$name),
+    registry$artifacts
+  )
+  
+  # Sort by name to ensure consistent order (compact_01, compact_02, etc.)
+  compact_artifacts <- compact_artifacts[order(names(compact_artifacts))]
+  
+  # Extract file paths
+  compact_paths <- sapply(compact_artifacts, function(x) x$file_path)
+  compact_paths <- compact_paths[file.exists(compact_paths)]
+  
+  if (length(compact_paths) > 0) {
+    knitr::include_graphics(compact_paths)
+  } else {
+    cat("No compact plots found in registry.\n")
+  }
+} else {
+  cat("Registry not available. Run pipeline with use_registry=TRUE.\n")
+}
+```
+
+## Expanded Variants (Scale: 2.25)
+
+Expanded ridgelines emphasize distribution shape with greater vertical separation.
+
+```{r expanded-plots}
+#| fig-height: 8
+#| fig-width: 10
+#| layout-ncol: 2
+
+# Phase 3: Load expanded plots from artifact registry
+if (!is.null(registry) && !is.null(registry$artifacts)) {
+  # Get expanded plot artifacts (IDs starting with "expanded_")
+  expanded_artifacts <- Filter(
+    function(x) x$type == "ridgeline_plots" && grepl("^expanded_", x$name),
+    registry$artifacts
+  )
+  
+  # Sort by name to ensure consistent order
+  expanded_artifacts <- expanded_artifacts[order(names(expanded_artifacts))]
+  
+  # Extract file paths
+  expanded_paths <- sapply(expanded_artifacts, function(x) x$file_path)
+  expanded_paths <- expanded_paths[file.exists(expanded_paths)]
+  
+  if (length(expanded_paths) > 0) {
+    knitr::include_graphics(expanded_paths)
+  } else {
+    cat("No expanded plots found. Run the pipeline to generate plots.\n")
+  }
+} else {
+  cat("No artifact registry available.\n")
+}
+```
+
+# Plot Generation Performance
+
+```{r generation-metrics}
+plot_res <- result$phase_results$plot_generation
+
+# Create performance summary
+perf_df <- data.frame(
+  Metric = c(
+    "Total Plots Attempted",
+    "Successfully Generated",
+    "Failed",
+    "Success Rate",
+    "Average Quality Score",
+    "Total Generation Time",
+    "Average Time per Plot"
+  ),
+  Value = c(
+    plot_res$plots_total,
+    plot_res$plots_generated,
+    plot_res$plots_failed,
+    sprintf("%.0f%%", plot_res$success_rate),
+    sprintf("%.0f/100", plot_res$quality_score),
+    sprintf("%.1f seconds", plot_res$duration_secs),
+    sprintf("%.2f seconds", mean(plot_res$generation_times, na.rm=TRUE))
+  )
+)
+
+kable(perf_df,
+      caption = "Plot Generation Performance Metrics",
+      booktabs = TRUE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  column_spec(1, bold = TRUE)
+```
+
+## Individual Plot Quality
+
+```{r individual-quality}
+# Extract individual plot quality scores
+plot_quality_df <- data.frame(
+  Plot_ID = sapply(plot_res$results, function(x) x$plot_id %||% "unknown"),
+  Status = sapply(plot_res$results, function(x) x$status),
+  Quality = sapply(plot_res$results, function(x) sprintf("%.0f", x$quality_score %||% 0)),
+  Time = sapply(plot_res$results, function(x) sprintf("%.2fs", x$generation_time %||% 0))
+)
+
+kable(plot_quality_df,
+      col.names = c("Plot ID", "Status", "Quality (0-100)", "Generation Time"),
+      caption = "Individual Plot Generation Results",
+      booktabs = TRUE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                font_size = 11) %>%
+  column_spec(2, color = ifelse(plot_quality_df$Status == "success", "green", "red"))
+```
+
+# Biological Interpretation
+
+## Mass Distribution Patterns
+
+```{r mass-analysis}
+# Analyze mass by dispersal status
+mass_by_origin <- df %>%
+  group_by(dispersed) %>%
+  summarise(
+    N = n(),
+    `Mean Mass (g)` = sprintf("%.1f", mean(mass, na.rm=TRUE)),
+    `SD Mass (g)` = sprintf("%.1f", sd(mass, na.rm=TRUE)),
+    `Min Mass (g)` = sprintf("%.0f", min(mass, na.rm=TRUE)),
+    `Max Mass (g)` = sprintf("%.0f", max(mass, na.rm=TRUE))
+  )
+
+kable(mass_by_origin,
+  caption = "Mass Distribution by Dispersal Status",
+      booktabs = TRUE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+## Temporal Trends
+
+```{r temporal-analysis}
+# Analyze temporal trends
+temporal <- df %>%
+  group_by(year) %>%
+  summarise(
+    N = n(),
+    `Mean Mass (g)` = mean(mass, na.rm=TRUE),
+    `SD Mass (g)` = sd(mass, na.rm=TRUE)
+  )
+
+ggplot(temporal, aes(x = year, y = `Mean Mass (g)`)) +
+  geom_line(color = "steelblue", size = 1) +
+  geom_point(color = "steelblue", size = 2) +
+  geom_ribbon(aes(ymin = `Mean Mass (g)` - `SD Mass (g)`,
+                  ymax = `Mean Mass (g)` + `SD Mass (g)`),
+              alpha = 0.2, fill = "steelblue") +
+  labs(title = "Temporal Trends in COHA Mass Distribution",
+       subtitle = "Mean ± SD across years",
+       x = "Year",
+       y = "Mass (g)") +
+  theme_minimal()
+```
+
+# Methods
+
+## Pipeline Architecture
+
+The analysis employs a three-phase pipeline with comprehensive error handling:
+
+1. **Data Load & Validation (Phase 3A)**
+  - Schema validation (required columns: mass, year, dispersed)
+   - Quality assessment (4-component scoring)
+   - Outlier detection (mass: 0-1000g, year: 1980-2027)
+
+2. **Plot Generation (Phase 3B)**
+   - Batch generation with continue-on-error
+   - Individual plot quality scoring
+   - File I/O error recovery
+
+3. **Result Aggregation (Phase 3C)**
+   - Comprehensive result objects
+   - Status classification (success/partial/failed)
+   - Weighted quality scoring
+
+## Quality Scoring Formula
+
+### Data Quality
+$$Q_{data} = \sum_{i=1}^{4} w_i \times c_i$$
+
+Where:
+- $c_1 = \text{Completeness}$ (% non-NA values)
+- $c_2 = \text{Schema Match}$ (% correct columns/types)
+- $c_3 = \text{Row Count}$ (meets minimum threshold)
+- $c_4 = \text{Outliers}$ (within expected ranges)
+- Weights: $w = [0.30, 0.30, 0.20, 0.20]$
+
+### Overall Pipeline Quality
+$$Q_{overall} = 0.40 \times Q_{data} + 0.60 \times Q_{plots}$$
+
+# Reproducibility
+
+## Software Environment
+
+```{r session-info}
+#| echo: true
+
+sessionInfo()
+```
+
+## Pipeline Execution
+
+```{r pipeline-code}
+#| echo: true
+#| eval: false
+
+# Complete pipeline can be reproduced with:
+source(here::here("R", "pipeline", "pipeline.R"))
+result <- run_pipeline(verbose = TRUE)
+
+# Results saved to: result$output_dir
+# Log file: result$log_file
+```
+
+## Data Access
+
+- **Source Data:** `data/data.csv`
+- **Configuration:** `inst/config/study_parameters.yaml`
+- **Output Directory:** `r result$output_dir`
+- **Log File:** `r result$log_file`
+- **Analysis Date:** `r format(result$timestamp, "%Y-%m-%d %H:%M:%S")`
+
+# Appendix
+
+## Pipeline Result Object
+
+```{r result-structure}
+#| echo: true
+
+# Complete result structure
+str(result, max.level = 2)
+```
+
+## Configuration
+
+```{r show-config}
+#| echo: true
+
+# Load study configuration
+config <- load_study_config(verbose = FALSE)
+str(config, max.level = 2)
+```
+
+---
+
+**Report Generated:** `r format(Sys.time(), "%Y-%m-%d %H:%M:%S")`  
+**Pipeline Version:** Phase 4.5  
+**Quality Score:** `r sprintf("%.0f/100", overall_quality)`  
+**Status:** `r toupper(result$status)`
