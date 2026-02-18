@@ -12,8 +12,18 @@ suppressPackageStartupMessages({
 
 set.seed(12345)
 
-source(file.path("Manuscript", "scripts", "shared_utils.R"))
-source(file.path("Manuscript", "scripts", "data_loader.R"))
+if (exists("manuscript_root") && nzchar(manuscript_root)) {
+  source(normalizePath(file.path(manuscript_root, "scripts", "shared_utils.R")))
+  source(normalizePath(file.path(manuscript_root, "scripts", "data_loader.R")))
+} else if (file.exists(file.path("scripts", "shared_utils.R"))) {
+  source(file.path("scripts", "shared_utils.R"))
+  source(file.path("scripts", "data_loader.R"))
+} else if (file.exists(file.path("Manuscript", "scripts", "shared_utils.R"))) {
+  source(file.path("Manuscript", "scripts", "shared_utils.R"))
+  source(file.path("Manuscript", "scripts", "data_loader.R"))
+} else {
+  stop("Could not locate shared_utils.R or data_loader.R. Run the runner from Manuscript/ or open this file in RStudio and Source it.")
+}
 
 res <- load_coha_data()
 coha_df <- res$data
@@ -23,7 +33,7 @@ output_dir <- "figures"
 output_base <- file.path(output_dir, "ridgeline")
 output_png <- paste0(output_base, ".png")
 output_pdf <- paste0(output_base, ".pdf")
-repro_report_path <- file.path(output_dir, "repro_report.txt")
+repro_report_path <- file.path(output_dir, "repro_report_ridgeline.txt")
 
 if (!dir.exists(output_dir)) {
   dir.create(output_dir, recursive = TRUE)
@@ -50,11 +60,7 @@ coha_df$period <- dplyr::case_when(
   TRUE ~ NA_character_
 )
 
-# HawkO_natural palette
-period_levels <- c(
-  "1980-1985", "1986-1991", "1992-1997", "1998-2003",
-  "2004-2009", "2010-2015", "2016-2021", "2022-2027"
-)
+# HawkO_natural palette (use shared `period_levels()` from `shared_utils.R`)
 plot_df <- coha_df %>%
   dplyr::filter(!is.na(period)) %>%
   dplyr::mutate(

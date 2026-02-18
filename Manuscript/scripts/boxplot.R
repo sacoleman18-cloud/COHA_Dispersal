@@ -9,8 +9,18 @@ suppressPackageStartupMessages({
 
 set.seed(12345)
 
-source(file.path("Manuscript", "scripts", "shared_utils.R"))
-source(file.path("Manuscript", "scripts", "data_loader.R"))
+if (exists("manuscript_root") && nzchar(manuscript_root)) {
+  source(normalizePath(file.path(manuscript_root, "scripts", "shared_utils.R")))
+  source(normalizePath(file.path(manuscript_root, "scripts", "data_loader.R")))
+} else if (file.exists(file.path("scripts", "shared_utils.R"))) {
+  source(file.path("scripts", "shared_utils.R"))
+  source(file.path("scripts", "data_loader.R"))
+} else if (file.exists(file.path("Manuscript", "scripts", "shared_utils.R"))) {
+  source(file.path("Manuscript", "scripts", "shared_utils.R"))
+  source(file.path("Manuscript", "scripts", "data_loader.R"))
+} else {
+  stop("Could not locate shared_utils.R or data_loader.R. Run the runner from Manuscript/ or open this file in RStudio and Source it.")
+}
 
 res <- load_coha_data()
 coha_df <- res$data
@@ -26,70 +36,34 @@ if (!dir.exists(output_dir)) {
   dir.create(output_dir, recursive = TRUE)
 }
 
-# Ensure expected columns exist (extra check for boxplot)
-required_cols_box <- c("mass", "year", "disp_lower")
+## Ensure expected columns exist (Dispersed vs Non-dispersed plot only needs `mass` and `dispersed`)
+required_cols_box <- c("mass", "dispersed")
 missing_cols_box <- setdiff(required_cols_box, names(coha_df))
 if (length(missing_cols_box) > 0) {
   stop(sprintf("Missing required columns: %s", paste(missing_cols_box, collapse = ", ")))
 }
 
-# Create plotting dataframe: filter and set factor levels
+# Prepare data: classify as Dispersed vs Non-dispersed
 plot_df <- coha_df %>%
-  dplyr::filter(!is.na(period)) %>%
   dplyr::mutate(
-    # create a local lowercased dispersal indicator from canonical `dispersed`
-    disp_lower = tolower(trimws(as.character(dispersed)))
-  ) %>%
-  dplyr::filter(disp_lower %in% c("wisconsin", "unknown")) %>%
-  dplyr::mutate(
+    disp_lower = tolower(trimws(as.character(dispersed))),
     dispersal_status = ifelse(disp_lower == "wisconsin", "Dispersed", "Non-dispersed"),
     dispersal_status = factor(dispersal_status, levels = c("Dispersed", "Non-dispersed"))
   ) %>%
-  dplyr::mutate(period = factor(period, levels = period_levels(), ordered = TRUE))
+  dplyr::filter(disp_lower %in% c("wisconsin", "unknown"))
 
 # Define colors: #56677F for Dispersed (wisconsin), #C98C63 for Non-dispersed (unknown)
 dispersal_colors <- c("Dispersed" = "#56677F", "Non-dispersed" = "#C98C63")
 
-plot_obj <- ggplot(plot_df, aes(x = period, y = mass, fill = dispersal_status)) +
-  geom_boxplot(alpha = 0.8, outlier.shape = 21, outlier.alpha = 0.5, position = position_dodge(width = 0.8)) +
-  stat_summary(
-    fun = mean,
-    geom = "point",
-    shape = 23,
-    size = 3,
-    color = "black",
-    position = position_dodge(width = 0.8),
-    show.legend = FALSE
-  ) +
-  stat_summary(
-    fun = mean,
-    geom = "line",
-    aes(group = dispersal_status),
-    position = position_dodge(width = 0.8),
-    linewidth = 0.6,
-    alpha = 0.7,
-    show.legend = FALSE
-  ) +
+# Simple boxplot: x = dispersal status, y = mass
+plot_obj <- ggplot(plot_df, aes(x = dispersal_status, y = mass, fill = dispersal_status)) +
+  geom_boxplot(alpha = 0.85, outlier.shape = 21, outlier.alpha = 0.5) +
+  stat_summary(fun = mean, geom = "point", shape = 23, size = 3, color = "black", show.legend = FALSE) +
   scale_fill_manual(values = dispersal_colors, name = "Dispersal Status") +
-  scale_y_continuous(
-    breaks = pretty(plot_df$mass, n = 6),
-    expand = expansion(mult = c(0.02, 0.05))
-  ) +
-  labs(
-    x = "Period",
-    y = "Mass (grams)",
-    title = "COHA Mass by Period and Dispersal Status"
-  ) +
+  scale_y_continuous(breaks = pretty(plot_df$mass, n = 6), expand = expansion(mult = c(0.02, 0.05))) +
+  labs(x = "Dispersal Status", y = "Mass (grams)", title = "COHA Mass: Dispersed vs Non-dispersed") +
   plot_theme(base_size = 12) +
-  theme(
-    plot.title = element_text(hjust = 0.5),
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.position = "top",
-    legend.title = element_text(size = 11, face = "bold"),
-    legend.text = element_text(size = 10),
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor = element_blank()
-  )
+  theme(plot.title = element_text(hjust = 0.5), legend.position = "none")
 
 ggsave(
   filename = output_png,

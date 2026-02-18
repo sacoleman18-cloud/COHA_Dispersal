@@ -1,3 +1,19 @@
+# Ignore generated results and large artifacts
+/results/
+
+# Ignore manuscript-generated figures (can be re-generated)
+/Manuscript/figures/
+
+# Common R session and project files
+.Rhistory
+.RData
+.Rproj.user/
+.Ruserdata
+.Renviron
+
+# OS generated files
+Thumbs.db
+.DS_Store
 # R-specific files
 .Rproj.user
 .Rhistory
