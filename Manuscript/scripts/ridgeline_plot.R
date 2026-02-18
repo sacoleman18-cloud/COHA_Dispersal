@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript
 # Ridgeline plot for COHA dispersal manuscript supplement.
 
+# load shared helpers and data loader
 suppressPackageStartupMessages({
   library(ggplot2)
   library(ggridges)
@@ -11,8 +12,13 @@ suppressPackageStartupMessages({
 
 set.seed(12345)
 
-data_path <- file.path("data", "data.csv")
-data_frozen_path <- file.path("data", "data_frozen.rds")
+source(file.path("Manuscript", "scripts", "shared_utils.R"))
+source(file.path("Manuscript", "scripts", "data_loader.R"))
+
+res <- load_coha_data()
+coha_df <- res$data
+data_source <- res$data_source
+
 output_dir <- "figures"
 output_base <- file.path(output_dir, "ridgeline")
 output_png <- paste0(output_base, ".png")
@@ -21,16 +27,6 @@ repro_report_path <- file.path(output_dir, "repro_report.txt")
 
 if (!dir.exists(output_dir)) {
   dir.create(output_dir, recursive = TRUE)
-}
-
-# Read data for manuscript figure.
-if (file.exists(data_frozen_path)) {
-  coha_df <- readRDS(data_frozen_path)
-  data_source <- data_frozen_path
-} else {
-  coha_df <- read.csv(data_path, stringsAsFactors = FALSE)
-  saveRDS(coha_df, data_frozen_path)
-  data_source <- data_path
 }
 
 # Ensure expected columns exist.
@@ -59,8 +55,13 @@ period_levels <- c(
   "1980-1985", "1986-1991", "1992-1997", "1998-2003",
   "2004-2009", "2010-2015", "2016-2021", "2022-2027"
 )
-plot_df <- plot_df %>%
-  dplyr::mutate(period = factor(period, levels = period_levels, ordered = TRUE))
+plot_df <- coha_df %>%
+  dplyr::filter(!is.na(period)) %>%
+  dplyr::mutate(
+    # create a local lowercased dispersal indicator from canonical `dispersed`
+    disp_lower = tolower(trimws(as.character(dispersed))),
+    period = factor(period, levels = period_levels(), ordered = TRUE)
+  )
 
 data_unknown <- plot_df %>%
   dplyr::filter(disp_lower == "unknown")
@@ -95,9 +96,8 @@ label_map <- period_counts %>%
 period_labels <- label_map$label
 names(period_labels) <- label_map$period
 
-hawkO_natural <- c("#1F2A3A", "#56677F", "#8C6A54", "#C98C63", "#EAD7B8", "#EF8C27")
-n_periods <- length(period_levels)
-fill_colors <- grDevices::colorRampPalette(hawkO_natural)(n_periods)
+n_periods <- length(period_levels())
+fill_colors <- hawkO_palette(n_periods)
 
 plot_obj <- ggplot(plot_df, aes(x = mass, y = period, fill = period)) +
   geom_density_ridges(scale = 2.25, alpha = 0.7, show.legend = FALSE) +
@@ -157,19 +157,7 @@ plot_obj <- ggplot(plot_df, aes(x = mass, y = period, fill = period)) +
     x = "Mass (grams)",
     y = "Period"
   ) +
-  theme_minimal(base_size = 12) +
-  theme(
-    plot.title = element_text(size = 14, face = "bold"),
-    plot.subtitle = element_text(size = 10, color = "gray50"),
-    axis.title = element_text(size = 12),
-    axis.text = element_text(size = 10, face = "bold", color = "black"),
-    axis.text.y = ggtext::element_markdown(lineheight = 1.1),
-    panel.grid.major.y = element_blank(),
-    panel.grid.minor = element_blank(),
-    axis.title.y = element_text(angle = 0, vjust = 0.5, margin = margin(r = 8)),
-    axis.title.x = element_text(margin = margin(t = 8)),
-    plot.background = element_rect(fill = "white", color = NA)
-  )
+  plot_theme()
 
 ggsave(
   filename = output_png,
@@ -186,41 +174,7 @@ ggsave(
   height = 6
 )
 
-sink(repro_report_path)
-cat("=== Reproducibility Report ===\n\n")
-cat("Script: ridgeline_plot.R\n")
-cat("Execution time: ", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n\n", sep = "")
-cat("R version: ", R.version.string, "\n", sep = "")
-cat("OS: ", Sys.info()["sysname"], " ", Sys.info()["release"], "\n\n", sep = "")
-
-cat("Loaded packages:\n")
-print(sessionInfo()$otherPkgs)
-cat("\n")
-
-cat("Input files:\n")
-if (file.exists(data_path)) {
-  cat("- ", data_path, " (sha256): ",
-      digest::digest(data_path, algo = "sha256", file = TRUE), "\n", sep = "")
-}
-if (file.exists(data_frozen_path)) {
-  cat("- ", data_frozen_path, " (sha256): ",
-      digest::digest(data_frozen_path, algo = "sha256", file = TRUE), "\n", sep = "")
-}
-cat("\n")
-
-cat("Output files:\n")
-if (file.exists(output_png)) {
-  cat("- ", output_png, " (sha256): ",
-      digest::digest(output_png, algo = "sha256", file = TRUE), "\n", sep = "")
-}
-if (file.exists(output_pdf)) {
-  cat("- ", output_pdf, " (sha256): ",
-      digest::digest(output_pdf, algo = "sha256", file = TRUE), "\n", sep = "")
-}
-cat("\n")
-
-cat("Random seed: 12345\n")
-sink()
+write_repro_report(repro_report_path, script_name = "ridgeline_plot.R", input_paths = c(res$data_path, res$data_frozen_path), output_paths = c(output_png, output_pdf), seed = 12345)
 
 message(sprintf("Saved figure to: %s", output_png))
 message(sprintf("Saved figure to: %s", output_pdf))
